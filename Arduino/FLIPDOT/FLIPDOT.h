@@ -14,6 +14,7 @@
 #include <Arduino.h>
 #include "SPI.h"
 #include "font.h"
+#include "font8x8.h"
 
 
 #ifndef FLIPDOT_h
@@ -24,11 +25,15 @@
 #define CHAR_WIDTH 16
 #define CHAR_HEIGHT 16
 #define CHAR_OFFSET CHAR_WIDTH - 6
+#define CHAR_WIDTH_SMALL 8
+#define CHAR_HEIGHT_SMALL 8
+#define CHAR_OFFSET_SMALL CHAR_WIDTH_SMALL - 3
 
 #define DEFAULT_SCROLL_DELAY_MILLISECONDS 200
 
 //width of panel (either 20 or 25)
 #define ROW_WIDTH 25
+#define COL_HEIGHT 16
 #define SHIFT_OE_PIN 9
 #define SHIFT_RCK_PIN 3
 
@@ -111,9 +116,11 @@ public:
   void FLIPDOT::init();
   void FLIPDOT::writeToAllColumns(uint16_t columnData);
   void FLIPDOT::render_frame(uint16_t frame[ROW_WIDTH]);
-  void FLIPDOT::render_string(const char *s, uint8_t x_offset);
+  void FLIPDOT::render_string(const char *s, int x_offset);
+  void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset = 0);
   void FLIPDOT::scroll_string(const char *s, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS);
-  void FLIPDOT::render_char_to_buffer(char c, uint8_t x);
+  void FLIPDOT::render_char_to_buffer(char c, short x);
+  void FLIPDOT::render_char_to_buffer_small(char c, int x, short y_offset = 0);
   void FLIPDOT::render_internal_framebuffer();
   void FLIPDOT::all_off();
 private:

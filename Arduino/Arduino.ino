@@ -26,6 +26,28 @@ uint16_t framebuffer[25] = {0,0b0000001110000000,0b0000011111000000,0b0000111111
 uint16_t framebuffer2[25] = {0,0,0,0,0,0b1111111111111111,0b1111111111111111,0b1111111111111111,0b0000001110000000,0b0000001110000000,0b0000001110000000,0b0000001110000000,0b0000001110000000,0b0000001110000000,0b0000001110000000,0b0000001110000000,0b0000001110000000,0b1111111111111111,0b1111111111111111,0b1111111111111111,0,0,0,0,0};
 
 void loop() {
+board->render_string_small("Hello World!\0",0);
+delay(1000);
+board->render_string_small("Hi biatch!\0",0);
+delay(2000);
+board->render_string_small("12:34\0",0);
+delay(2000);
+board->render_string_small("12:35\0",0,3);
+delay(2000);
+board->render_string_small("23:49\0",0,10);
+delay(2000);
+board->render_string_small("23:49\0",0,-10);
+delay(2000);
+board->render_string_small("23:49\0",0,-4);
+delay(2000);
+board->render_string_small("23:49\0",0,-2);
+delay(2000);
+board->render_string_small("23:49\0",0,10);
+delay(2000);
+board->render_string_small("23:49\0",0,13);
+delay(2000);
+board->render_string_small("23:49\0",0,8);
+delay(2000);
 for(int i = 0; i < 20; i++) {
     board->render_frame(framebuffer);
     delay(i*5);

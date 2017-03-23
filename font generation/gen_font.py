@@ -13,10 +13,14 @@
 import os,sys,struct
 import numpy as np
 
-FILE_NAME= "ExportedFont.bmp"
+#just put the one you want to generate last
+FILE_NAME = "ExportedFontBold.bmp"
+FILE_NAME = "ExportedFont8x8.bmp"
+FILE_NAME = "ExportedFont.bmp"
+
 OUTPUT_FILE_NAME = "font.h"
 CHAR_HEIGHT = 16
-CHAR_WIDTH = 16
+CHAR_WIDTH = CHAR_HEIGHT
 
 def get_header_val(name, pos, l):
     f.seek(pos)
@@ -34,7 +38,7 @@ def get_header_val(name, pos, l):
 size_bmp = os.path.getsize(FILE_NAME)
 print("Size of bmp: " + str(size_bmp))
 
-font_buffer = np.zeros((256,16,16)) # 3D array containing the font
+font_buffer = np.zeros((256,CHAR_HEIGHT,CHAR_WIDTH)) # 3D array containing the font
 char_num = 0
 
 f = open(FILE_NAME,"rb")
@@ -56,9 +60,9 @@ try:
         #linewise reading the image
         for line in reversed(range(height)):
             char_y = int(line % CHAR_HEIGHT) #calculate y position in current char
-            if(char_y != 15 and line != 255):
+            if(char_y != CHAR_HEIGHT-1 and line != height-1):
                 char_num -= chars_per_line #now starting at beginning line again, so at the first char we looked at when we entered the column loop, -1 because of 0-indexing
-            elif(line != 255):
+            elif(line != height-1):
                 reading_next_charset = True
 
             f.seek(offset+line*width*3)
@@ -88,23 +92,34 @@ finally:
 
 
 f = open(OUTPUT_FILE_NAME, 'w')
-header = "#include <avr/pgmspace.h>\n\nPROGMEM const uint16_t font[] = {\n"
+header = "#include <avr/pgmspace.h>\n\nPROGMEM const "
+if(CHAR_HEIGHT == 16):
+    header += "uint16_t font[]"
+elif (CHAR_HEIGHT == 8):
+    header += "uint8_t font_small[]"
+else:
+    raise Exception('char height', 'height of chars not supported')
+header += " = {\n"
 footer = "\n};"
 f.write(header)
 content = ""
 
 for letter in range(256):
     #sys.stdout.write("\n---------------------\n")
-    content += "  // " + str(letter) + "\n"
-    for x in range(16):
+    content += "  // " + str(chr(letter+32)) + ":  " + str(letter) + "\n"
+    for x in range(CHAR_WIDTH):
         font_column = "  0b"
+        part_a = ""
+        part_b = ""
         for y in range(CHAR_HEIGHT):
             if(font_buffer[letter,x,y] == 1):
-                font_column += "1"
+                if (y < 8): part_a += "1"
+                if(y >= 8): part_b += "1"
             else:
-                font_column +=  "0"
-        if(letter < 255):
-            content += font_column + ",\n"
+                if (y < 8): part_a += "0"
+                if(y >= 8): part_b += "0"
+        font_column += part_b + part_a #because Arduino/AVR lib reads it big endian
+        content += font_column + ",\n"
     content += "\n\n"
 f.write(content)
 f.write(footer)

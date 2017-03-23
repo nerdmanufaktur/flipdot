@@ -79,32 +79,89 @@ void FLIPDOT::render_internal_framebuffer() {
   render_frame(frame_buff);
 }
 
-
 /*
 Render a char to the frame_buff with horizontal offset (can be negative)
 */
-void FLIPDOT::render_char_to_buffer(char c, uint8_t x_offset) {
+void FLIPDOT::render_char_to_buffer(char c, short x_offset) {
   // Convert the character to an index
   c = (c - 32);
   uint16_t current_font_column;
-  uint8_t current_pos;
+  short current_pos;
   // Draw pixels
   for (uint8_t j=0; j<CHAR_WIDTH; j++) {
     current_pos = x_offset+j;
     if((current_pos >= 0) && (current_pos < ROW_WIDTH)) { //case of negative offset
       current_font_column = pgm_read_word_near(font + c*CHAR_WIDTH + j); //returns uint16_t in big endian
-      frame_buff[current_pos] = (current_font_column >> 8) | (current_font_column << 8); //converting big endian to little endian for correct column formatting
+      frame_buff[current_pos] = current_font_column; //converting big endian to little endian for correct column formatting
     }
   }
 }
 
 /*
+Render a char with 8x8 font to the frame_buff with horizontal/vertical offsets (can be negative)
+*/
+void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset = 0) {
+  // Convert the character to an index
+  c = (c - 32);
+  uint8_t current_font_column;
+  uint8_t msb_column;
+  uint8_t lsb_column;
+  int current_pos;
+
+  if((y_offset > -CHAR_HEIGHT_SMALL) && (y_offset < COL_HEIGHT)) { //check if vertical offset is in visible range
+      // Draw pixels
+      for (uint8_t j=0; j<CHAR_WIDTH_SMALL; j++) {
+        current_pos = x_offset+j;
+        if((current_pos >= 0) && (current_pos < ROW_WIDTH)) { //check if horizontal offset is in visible range
+          current_font_column = pgm_read_byte_near(font_small + c*CHAR_WIDTH_SMALL + j); //returns uint16_t in big endian
+          if(y_offset >= 0 && y_offset < 8) { // y_offset 0 to 7: char spans over both bytes of col
+            msb_column = current_font_column << y_offset;
+            lsb_column = current_font_column >> (8-y_offset);
+          } else if (y_offset >= 0) { // y_offset 8 to 15: char spans only over lower lsb of col
+            msb_column = 0;
+            lsb_column = current_font_column << (y_offset-8);
+          } else { // y_offset -1 to -7: char spans only over upper msb of col
+            msb_column = current_font_column >> -y_offset;
+            lsb_column = 0;
+          }
+          frame_buff[current_pos] = msb_column << 8 | lsb_column;  //converting big endian to little endian for correct column formatting
+        }
+      }
+    }
+}
+
+/*
 Render a string to the flip-dot with horizontal offset (can be negative)
 */
-void FLIPDOT::render_string(const char* str, uint8_t x_offset) {
+void FLIPDOT::render_string(const char* str, int x_offset) {
     while (*str) {
+      if(x_offset >= ROW_WIDTH) { //don't try to render invisible chars
+        break;
+      } else if(x_offset <= -CHAR_WIDTH) {
+        str++;
+        x_offset += CHAR_OFFSET;
+      } else {
         render_char_to_buffer(*str++, x_offset);
         x_offset += CHAR_OFFSET;
+      }
+    }
+    render_internal_framebuffer();
+}
+
+/*
+Render a string with 8x8 characters to the flip-dot with horizontal and vertical offset (can be negative)
+*/
+void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset = 0) {
+    while (*str) {
+      if(x_offset >= ROW_WIDTH) { //don't try to render invisible chars
+        break;
+      } else if(x_offset <= -CHAR_WIDTH_SMALL) {
+        str++;
+        x_offset += CHAR_OFFSET_SMALL;
+      } else {
+        render_char_to_buffer_small(*str++, x_offset, y_offset);
+        x_offset += CHAR_OFFSET_SMALL;
+      }
     }
     render_internal_framebuffer();
 }
