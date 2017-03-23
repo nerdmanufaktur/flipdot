@@ -111,11 +111,13 @@ public:
   void FLIPDOT::init();
   void FLIPDOT::writeToAllColumns(uint16_t columnData);
   void FLIPDOT::render_frame(uint16_t frame[ROW_WIDTH]);
-  void FLIPDOT::render_string(const char *s, int x_offset);
+  void FLIPDOT::render_string(const char *s, uint8_t x_offset);
   void FLIPDOT::scroll_string(const char *s, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS);
+  void FLIPDOT::render_char_to_buffer(char c, uint8_t x);
+  void FLIPDOT::render_internal_framebuffer();
+  void FLIPDOT::all_off();
 private:
   void FLIPDOT::writeToRegisters();
-  void FLIPDOT::render_char_to_buffer(char c, int x);
 };
 
 #endif

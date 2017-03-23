@@ -73,18 +73,27 @@ void FLIPDOT::render_frame(uint16_t frame[ROW_WIDTH]) {
 }
 
 /*
+Render internal frame buffer on the board
+*/
+void FLIPDOT::render_internal_framebuffer() {
+  render_frame(frame_buff);
+}
+
+
+/*
 Render a char to the frame_buff with horizontal offset (can be negative)
 */
-void FLIPDOT::render_char_to_buffer(char c, int x_offset) {
+void FLIPDOT::render_char_to_buffer(char c, uint8_t x_offset) {
   // Convert the character to an index
   c = (c - 32);
-  uint16_t temp;
-
+  uint16_t current_font_column;
+  uint8_t current_pos;
   // Draw pixels
-  for (int j=0; j<CHAR_WIDTH; j++) {
-    if( (x_offset+j >= 0) && (x_offset+j < ROW_WIDTH) ) { //case of negative offset
-      temp = pgm_read_word_near(font + c*CHAR_WIDTH + j); //returns uint16_t in big endian
-      frame_buff[x_offset+j] = (temp >> 8) | (temp << 8); //converting big endian to little endian for correct column formatting
+  for (uint8_t j=0; j<CHAR_WIDTH; j++) {
+    current_pos = x_offset+j;
+    if((current_pos >= 0) && (current_pos < ROW_WIDTH)) { //case of negative offset
+      current_font_column = pgm_read_word_near(font + c*CHAR_WIDTH + j); //returns uint16_t in big endian
+      frame_buff[current_pos] = (current_font_column >> 8) | (current_font_column << 8); //converting big endian to little endian for correct column formatting
     }
   }
 }
@@ -92,12 +101,12 @@ void FLIPDOT::render_char_to_buffer(char c, int x_offset) {
 /*
 Render a string to the flip-dot with horizontal offset (can be negative)
 */
-void FLIPDOT::render_string(const char* str, int x_offset) {
+void FLIPDOT::render_string(const char* str, uint8_t x_offset) {
     while (*str) {
         render_char_to_buffer(*str++, x_offset);
         x_offset += CHAR_OFFSET;
     }
-    render_frame(frame_buff);
+    render_internal_framebuffer();
 }
 
 
@@ -124,9 +133,16 @@ void FLIPDOT::scroll_string(const char* str, int millis_delay = DEFAULT_SCROLL_D
               char_offset += CHAR_OFFSET;
             }
         }
-        render_frame(frame_buff);
+        render_internal_framebuffer();
         str = str_ptr;
         x_offset--;
         delay(millis_delay);
     }
+}
+
+/*
+all dots off
+*/
+void FLIPDOT::all_off() {
+  writeToAllColumns(0b00000000000000);
 }
