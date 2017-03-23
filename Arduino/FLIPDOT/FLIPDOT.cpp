@@ -107,15 +107,25 @@ Scroll a string over the flip-dot
 void FLIPDOT::scroll_string(const char* str, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS) {
     int x_offset = 0;
     int char_offset = 0;
+    const char* str_ptr = str;
     int str_size = strlen(str);
-    for(int i = 0; i < str_size*CHAR_WIDTH; i++) {
+    int current_pos = 0;
+    for(int i = 0; i < str_size*(CHAR_OFFSET); i++) {
         char_offset = 0;
         while (*str) {
-            render_char_to_buffer(*str++, x_offset+char_offset);
-            char_offset += CHAR_OFFSET;
+            current_pos = x_offset+char_offset;
+            if(current_pos >= ROW_WIDTH) { //don't try to render invisible chars
+              break;
+            } else if (current_pos <= -CHAR_WIDTH) {
+              str++;
+              char_offset += CHAR_OFFSET;
+            } else {
+              render_char_to_buffer(*str++, current_pos);
+              char_offset += CHAR_OFFSET;
+            }
         }
         render_frame(frame_buff);
-        str -= str_size;
+        str = str_ptr;
         x_offset--;
         delay(millis_delay);
     }

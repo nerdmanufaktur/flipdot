@@ -28,7 +28,7 @@ board->render_frame(framebuffer);
 delay(500);
 board->scroll_string("Hello World!\0",40);
 delay(1000);
-board->scroll_string("I LOVE FLIP-DOTS MORE THAN $$!!\0",40);
+board->scroll_string("I LOVE FLIP-DOTS MORE THAN $$!!\0",0);
 delay(1000);
 board->render_string("13:42",2);
 delay(1000);
