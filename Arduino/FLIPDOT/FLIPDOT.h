@@ -23,7 +23,7 @@
 
 #define CHAR_WIDTH 16
 #define CHAR_HEIGHT 16
-#define CHAR_OFFSET CHAR_WIDTH - 5
+#define CHAR_OFFSET CHAR_WIDTH - 6
 
 #define DEFAULT_SCROLL_DELAY_MILLISECONDS 200
 
@@ -108,7 +108,8 @@ byte controlBuffer = 0; //holds data of current control bits (clear, clock, rese
 
 public:
   FLIPDOT();
-  void writeToAllColumns(uint16_t columnData);
+  void FLIPDOT::init();
+  void FLIPDOT::writeToAllColumns(uint16_t columnData);
   void FLIPDOT::render_frame(uint16_t frame[ROW_WIDTH]);
   void FLIPDOT::render_string(const char *s, int x_offset);
   void FLIPDOT::scroll_string(const char *s, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS);

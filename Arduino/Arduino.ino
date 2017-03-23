@@ -16,15 +16,7 @@ FLIPDOT *board = new FLIPDOT();
 
 void setup() {
   Serial.begin(115200);
-
-  pinMode(SHIFT_RCK_PIN, OUTPUT);
-  pinMode(SHIFT_OE_PIN, OUTPUT);
-  digitalWrite(SHIFT_OE_PIN, LOW); // output shift register values
-
-  SPI.begin();
-  SPI.setDataMode(SPI_MODE0);
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV2);
+  board->init();
 }
 
 uint16_t framebuffer[25] = {0,0b0000001110000000,0b0000011111000000,0b0000111111100000,0b0001111111110000,0b0011111111111000,0b0011111111111000,0b0011111111111000,

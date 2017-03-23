@@ -22,6 +22,20 @@ FLIPDOT::FLIPDOT() {
 }
 
 /*
+Initialize all pins and getting the SPI ready to rock!
+*/
+void FLIPDOT::init() {
+  pinMode(SHIFT_RCK_PIN, OUTPUT);
+  pinMode(SHIFT_OE_PIN, OUTPUT);
+  digitalWrite(SHIFT_OE_PIN, LOW); // output shift register values
+
+  SPI.begin();
+  SPI.setDataMode(SPI_MODE0);
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setClockDivider(SPI_CLOCK_DIV2);
+}
+
+/*
 write given column to all columns on panel
 */
 void FLIPDOT::writeToAllColumns(uint16_t columnData) {
@@ -36,7 +50,7 @@ void FLIPDOT::writeToAllColumns(uint16_t columnData) {
 }
 
 /*
-Write current buffers via SPI to shift registers
+Write current control and column buffers via SPI to shift registers
 */
 void FLIPDOT::writeToRegisters() {
   SPI.transfer(controlBuffer);
