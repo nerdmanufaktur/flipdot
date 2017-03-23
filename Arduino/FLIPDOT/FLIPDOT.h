@@ -56,7 +56,7 @@
   setControlBits(0,1,0,1);\
   writeToRegisters();\
   digitalWrite(SHIFT_OE_PIN, LOW);\
-  delay(2);\
+  delay(3);\
   setControlBits(1,1,0,1);\
   columnBuffer = ALL_COLUMN_PIXELS_ON;\
   writeToRegisters();\
@@ -78,21 +78,21 @@
   writeToRegisters();
 
 //function call is too slow and the compiler not clever enough, therefore we use a preprocessor fake function
-#define writeToNewColumn(data) delayMicroseconds(800);\
+#define writeToNewColumn(data) delayMicroseconds(900);\
     setControlBits(1,1,1,1);\
     writeToRegisters();\
-    delayMicroseconds(50);\
+    delayMicroseconds(100);\
     setControlBits(1,0,1,1);\
     writeToRegisters();\
     delayMicroseconds(20);\
     setControlBits(1,1,1,1);\
     columnBuffer = data;\
     writeToRegisters();\
-    delayMicroseconds(800);\
+    delayMicroseconds(900);\
     columnBuffer = 0;\
     setControlBits(0,1,1,1);\
     writeToRegisters();\
-    delayMicroseconds(50);\
+    delayMicroseconds(100);\
     setControlBits(1,0,1,1);\
     writeToRegisters();\
     delayMicroseconds(10);\
