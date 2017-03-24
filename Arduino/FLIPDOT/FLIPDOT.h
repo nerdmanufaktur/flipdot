@@ -29,7 +29,10 @@
 #define CHAR_HEIGHT_SMALL 8
 #define CHAR_OFFSET_SMALL CHAR_WIDTH_SMALL - 3
 
-#define DEFAULT_SCROLL_DELAY_MILLISECONDS 200
+#define DEFAULT_SCROLL_DELAY_MILLISECONDS 0
+#define DEFAULT_SCROLL_X_OFFSET ROW_WIDTH
+#define DEFAULT_SMALL_Y_OFFSET 4
+#define RENDER_STRING_DEFAULT_X_OFFSET 0
 
 //width of panel (either 20 or 25)
 #define ROW_WIDTH 25
@@ -108,6 +111,7 @@ class FLIPDOT {
 
 //frame buffer (for super fancy diffing etc.)
 uint16_t frame_buff[ROW_WIDTH] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint16_t last_frame_buff[ROW_WIDTH] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 uint16_t columnBuffer = 0; //holds data of current column pixel data
 byte controlBuffer = 0; //holds data of current control bits (clear, clock, reset, select 1, ... , select 5)
 
@@ -116,15 +120,18 @@ public:
   void FLIPDOT::init();
   void FLIPDOT::writeToAllColumns(uint16_t columnData);
   void FLIPDOT::render_frame(uint16_t frame[ROW_WIDTH]);
-  void FLIPDOT::render_string(const char *s, int x_offset);
-  void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset = 0);
-  void FLIPDOT::scroll_string(const char *s, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS);
+  void FLIPDOT::render_string(const char *s, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET);
+  void FLIPDOT::render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET);
+  void FLIPDOT::scroll_string(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS);
+  void FLIPDOT::scroll_string_small(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS, short y_offset = DEFAULT_SMALL_Y_OFFSET);
   void FLIPDOT::render_char_to_buffer(char c, short x);
-  void FLIPDOT::render_char_to_buffer_small(char c, int x, short y_offset = 0);
+  void FLIPDOT::render_char_to_buffer_small(char c, int x, short y_offset);
   void FLIPDOT::render_internal_framebuffer();
   void FLIPDOT::all_off();
 private:
   void FLIPDOT::writeToRegisters();
+  void FLIPDOT::zero_frame_buff();
+  bool FLIPDOT::frame_buff_changed();
 };
 
 #endif

@@ -76,7 +76,9 @@ void FLIPDOT::render_frame(uint16_t frame[ROW_WIDTH]) {
 Render internal frame buffer on the board
 */
 void FLIPDOT::render_internal_framebuffer() {
-  render_frame(frame_buff);
+  if(frame_buff_changed()){
+      render_frame(frame_buff);
+  }
 }
 
 /*
@@ -100,7 +102,7 @@ void FLIPDOT::render_char_to_buffer(char c, short x_offset) {
 /*
 Render a char with 8x8 font to the frame_buff with horizontal/vertical offsets (can be negative)
 */
-void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset = 0) {
+void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset) {
   // Convert the character to an index
   c = (c - 32);
   uint8_t current_font_column;
@@ -133,7 +135,8 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset =
 /*
 Render a string to the flip-dot with horizontal offset (can be negative)
 */
-void FLIPDOT::render_string(const char* str, int x_offset) {
+void FLIPDOT::render_string(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET) {
+    zero_frame_buff();
     while (*str) {
       if(x_offset >= ROW_WIDTH) { //don't try to render invisible chars
         break;
@@ -151,7 +154,8 @@ void FLIPDOT::render_string(const char* str, int x_offset) {
 /*
 Render a string with 8x8 characters to the flip-dot with horizontal and vertical offset (can be negative)
 */
-void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset = 0) {
+void FLIPDOT::render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET) {
+    zero_frame_buff();
     while (*str) {
       if(x_offset >= ROW_WIDTH) { //don't try to render invisible chars
         break;
@@ -170,28 +174,24 @@ void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset 
 /*
 Scroll a string over the flip-dot
 */
-void FLIPDOT::scroll_string(const char* str, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS) {
-    int x_offset = 0;
-    int char_offset = 0;
-    const char* str_ptr = str;
+void FLIPDOT::scroll_string(const char* str, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS) {
     int str_size = strlen(str);
-    int current_pos = 0;
-    for(int i = 0; i < str_size*(CHAR_OFFSET); i++) {
-        char_offset = 0;
-        while (*str) {
-            current_pos = x_offset+char_offset;
-            if(current_pos >= ROW_WIDTH) { //don't try to render invisible chars
-              break;
-            } else if (current_pos <= -CHAR_WIDTH) {
-              str++;
-              char_offset += CHAR_OFFSET;
-            } else {
-              render_char_to_buffer(*str++, current_pos);
-              char_offset += CHAR_OFFSET;
-            }
-        }
-        render_internal_framebuffer();
-        str = str_ptr;
+    int initial_x_offset = x_offset;
+    for(int i = 0; i < (str_size*(CHAR_OFFSET)+initial_x_offset); i++) {
+        render_string(str, x_offset);
+        x_offset--;
+        delay(millis_delay);
+    }
+}
+
+/*
+Scroll a small 8x8 font string over the flip-dot
+*/
+void FLIPDOT::scroll_string_small(const char* str, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS, short y_offset = DEFAULT_SMALL_Y_OFFSET) {
+    int initial_x_offset = x_offset;
+    int str_size = strlen(str);
+    for(int i = 0; i < (str_size*(CHAR_OFFSET_SMALL)+initial_x_offset); i++) {
+        render_string_small(str, x_offset, y_offset);
         x_offset--;
         delay(millis_delay);
     }
@@ -202,4 +202,24 @@ all dots off
 */
 void FLIPDOT::all_off() {
   writeToAllColumns(0b00000000000000);
+}
+
+/*
+zero the internal frame buffer
+*/
+void FLIPDOT::zero_frame_buff() {
+  memset(frame_buff, 0, ROW_WIDTH*2); //*2 because memset takes no of bytes
+}
+
+/*
+returns true if the frame_buff changed compared to last_frame_buff
+*/
+bool FLIPDOT::frame_buff_changed() {
+  for(int i = 0; i < ROW_WIDTH; i++) {
+    if(frame_buff[i] != last_frame_buff[i]){
+      memcpy(&last_frame_buff, &frame_buff, sizeof(frame_buff));
+      return true;
+    }
+  }
+  return false;
 }
