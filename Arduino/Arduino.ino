@@ -29,14 +29,34 @@ uint16_t framebuffer2[25] = {0, 0, 0, 0, 0, 0b1111111111111111, 0b11111111111111
 void loop() {
   board->render_string("HI IHR SPASTEN\0", 4);
   delay(1000);
+  /*
   board->all_off();
-  int h = 0;
-  const float delta = 8 * PI/115;
-  for (float a = 0; a <= 8 * PI; a += delta) {
-    board->draw_in_internal_framebuffer(1,h++,8*(1+sin(a)));
+  const float delta = 8*PI/115;
+  float rad = 0;
+  for (float a = 0; a < 115; a++) {
+    float val = 7.6+7.6*sin(rad);
+    board->draw_in_internal_framebuffer(1,a,val); 
     board->render_internal_framebuffer();
-    delay(10);
+    rad += delta;
   }
+  rad = 0;
+  for (float a = 0; a < 115; a++) {
+    float val = 7.6+7.6*cos(rad);
+    board->draw_in_internal_framebuffer(1,a,val); 
+    board->render_internal_framebuffer();
+    rad += delta;
+  }
+  board->all_off();
+  for (int a = 0; a < 115; a++) {
+    board->draw_in_internal_framebuffer(1,a,7); 
+    board->render_internal_framebuffer();
+  }
+  delay(1000);
+  for (uint8_t a = 114; a >= 0; a-=1) {
+    board->draw_in_internal_framebuffer(1,a,a%15); 
+    board->render_internal_framebuffer();
+  }
+  delay(1000);*/
   board->all_off();
   delay(1000);
   board->all_on();
