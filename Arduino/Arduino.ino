@@ -27,8 +27,9 @@ uint16_t framebuffer[25] = {0, 0b0000001110000000, 0b0000011111000000, 0b0000111
 uint16_t framebuffer2[25] = {0, 0, 0, 0, 0, 0b1111111111111111, 0b1111111111111111, 0b1111111111111111, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b1111111111111111, 0b1111111111111111, 0b1111111111111111, 0, 0, 0, 0, 0};
 
 void loop() {
-  board->render_string("HI IHR SPASTEN\0", 4);
+  board->render_string("HALLO WELT!\0", 4);
   delay(1000);
+  board->render_string("Ciao DOOF!\0", 4, false);
   /*
   board->all_off();
   const float delta = 8*PI/115;
@@ -45,12 +46,16 @@ void loop() {
     board->draw_in_internal_framebuffer(1,a,val); 
     board->render_internal_framebuffer();
     rad += delta;
-  }
+  }*/
   board->all_off();
   for (int a = 0; a < 115; a++) {
     board->draw_in_internal_framebuffer(1,a,7); 
     board->render_internal_framebuffer();
   }
+  delay(1000);
+  board->write_to_all_columns(0b0000010000000000);
+  delay(1000);
+  /*
   delay(1000);
   for (uint8_t a = 114; a >= 0; a-=1) {
     board->draw_in_internal_framebuffer(1,a,a%15); 
@@ -77,96 +82,76 @@ void loop() {
     int y = 4 + 8 * sin(a);
     board->render_string_small("12:34\0", x, y);
   }
-  board->render_string_small("12:34\0", 0, 4);
+float deg = 0;
+  for (float a = 0; a <= 115; a++) {
+    board->render_string_small("12:34\0", a,5.5+5.5*sin(deg),false);
+    deg += 0.2;
+  }
+  for (float a = 114; a >= 0; a-=1) {
+    board->render_string_small("12:34\0", a, 5.5+5.5*sin(deg));
+    deg -= 0.2;
+  }
+  board->render_string_small("Tagesmenü:\0", 8*CHAR_OFFSET_SMALL, 0);
+  board->render_string_small("Brokkolisuppe\0", 8*CHAR_OFFSET_SMALL, 8);
+  board->render_string_small("12:34\0", 0, 4,false);
   delay(500);
-  board->render_string_small("12 34\0", 0, 4);
+  board->render_string_small("12 34\0", 0, 4,false);
   delay(500);
-  board->render_string_small("12:35\0", 0, 4);
+  board->render_string_small("12:35\0", 0, 4,false);
   delay(500);
-  board->render_string_small("12 35\0", 0, 4);
+  board->render_string_small("12 35\0", 0, 4,false);
   delay(500);
-  board->render_string_small("12:36\0", 0, 4);
+  board->render_string_small("Happy Hour:\0", 22*CHAR_OFFSET_SMALL, 0);
+  board->render_string_small("Cocktails 7€\0", 22*CHAR_OFFSET_SMALL, 8);
+  board->render_string_small("12:36\0", 0, 4,false);
   delay(500);
-  board->render_string_small("12 36\0", 0, 4);
+  board->render_string_small("12 36\0", 0, 4,false);
+  delay(500);
+  board->render_string_small("12:37\0", 0, 4,false);
+  delay(500);
+  board->render_string_small("12 37\0", 0, 4,false);
   delay(1000);
   board->render_string("0\0", 8);
-  delay(1000);
+  delay(500);
   board->render_string("1\0", 8);
-  delay(1000);
+  delay(500);
   board->render_string("2\0", 8);
-  delay(1000);
+  delay(500);
   board->all_off();
   board->render_string("3\0", 8);
-  delay(1000);
+  delay(500);
   board->all_off();
   board->render_string("4\0", 8);
-  delay(1000);
+  delay(500);
   board->all_off();
   board->render_string("5\0", 8);
-  delay(1000);
+  delay(500);
   board->all_off();
   board->render_string("6\0", 8);
-  delay(1000);
+  delay(500);
   board->all_off();
   board->render_string("7\0", 8);
-  delay(1000);
+  delay(500);
   board->all_off();
   board->render_string("8\0", 8);
-  delay(1000);
+  delay(500);
   board->all_off();
   board->render_string("9\0", 8);
-  delay(1000);
+  delay(500);
   board->render_string("10\0", 4);
-  delay(1500);
-  board->all_off();
-  board->scroll_string("FlipDot>LUV");
-  delay(1000);
-
-  /*
-    for(int  x= -4; x < 18; x++) {
-     for(int y = -7; y < 16; y++) {
-     board->render_string_small("12:34\0",x,y);
-    }
-    }
-    for(int y = -7; y < 16; y++) {
-    for(int  x= -4; x < 18; x++) {
-     board->render_string_small("12:34\0",x,y);
-    }
-    }
-  */
-
-  board->render_string_small("12:34\0");
-  delay(2000);
-  board->render_string_small("23:49\0", 0, 4);
-  delay(2000);
-  board->render_string_small("23:50\0", 0, 4);
-  delay(2000);
-  board->render_string_small("23:49\0", 0, 8);
-  delay(2000);
-  for (int i = 0; i < 20; i++) {
-    board->render_frame(framebuffer);
-    delay(i * 5);
-    board->render_frame(framebuffer2);
-    delay(i * 5);
-  }
-  delay(1000);
-  board->render_string("13:42", 2);
   delay(1000);
   board->all_off();
-  delay(100);
-  board->render_string("13:43", 2);
+  board->scroll_string("Hi");
   delay(1000);
-  board->all_off();
-  delay(100);
-  board->render_string("13:43", 2);
+  board->render_string("12:38", 2);
   delay(1000);
-  board->all_off();
-  delay(100);
-  board->render_string("12:00", 2);
+  board->render_string("12:39", 2);
   delay(1000);
-  board->all_off();
-  delay(100);
-  board->render_string("66:00", 2);
+  board->render_string("13:40", 2);
+  delay(1000);
+  board->render_string("12:41", 2);
+  delay(1000);
+  board->render_string("12:42", 2);
   delay(1000);
 }
 
