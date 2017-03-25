@@ -18,7 +18,7 @@
 Initialize to set the pin mapping as described above
 */
 FLIPDOT::FLIPDOT() {
-
+  number_of_panels = sizeof(panel_configuration)/sizeof(panel_configuration[0]);
 }
 
 /*
@@ -39,14 +39,18 @@ void FLIPDOT::init() {
 write given column to all columns on panel
 */
 void FLIPDOT::writeToAllColumns(uint16_t columnData) {
-  //preprocessor function!
-  initializePanel()
 
-  for (int i = 0; i < ROW_WIDTH; i++) {
-    //preprocessor function!
-    writeToNewColumn(columnData)
-  }
+    for(int i = 0; i < number_of_panels; i++){
+        uint8_t pin = select_pin_mapping[i];
+        //preprocessor function!
+        initializePanel(pin)
 
+        for (int j = 0; j < panel_configuration[i]; j++) {
+          //preprocessor function!
+          writeToNewColumn(columnData,pin)
+        }
+
+    }
 }
 
 /*
@@ -62,12 +66,16 @@ void FLIPDOT::writeToRegisters() {
 /*
 Render a frame on the board
 */
-void FLIPDOT::render_frame(uint16_t frame[ROW_WIDTH]) {
-  //preprocessor function!
-  initializePanel()
+void FLIPDOT::render_frame(uint16_t frame[DISPLAY_WIDTH]) {
+  uint8_t current_col = 0;
+  for(int i = 0; i < number_of_panels; i++){
+      uint8_t pin = select_pin_mapping[i];
+      //preprocessor function!
+      initializePanel(pin)
 
-  for (int i = 0; i < ROW_WIDTH; i++) {
-      writeToNewColumn(frame[i]) //future optimization: skip columns!
+      for (int j = 0; j < panel_configuration[i]; j++) {
+          writeToNewColumn(frame[current_col++],pin) //future optimization: skip columns!
+      }
   }
 
 }
@@ -92,7 +100,7 @@ void FLIPDOT::render_char_to_buffer(char c, short x_offset) {
   // Draw pixels
   for (uint8_t j=0; j<CHAR_WIDTH; j++) {
     current_pos = x_offset+j;
-    if((current_pos >= 0) && (current_pos < ROW_WIDTH)) { //case of negative offset
+    if((current_pos >= 0) && (current_pos < DISPLAY_WIDTH)) { //case of negative offset
       current_font_column = pgm_read_word_near(font + c*CHAR_WIDTH + j); //returns uint16_t in big endian
       frame_buff[current_pos] = current_font_column; //converting big endian to little endian for correct column formatting
     }
@@ -114,7 +122,7 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset) 
       // Draw pixels
       for (uint8_t j=0; j<CHAR_WIDTH_SMALL; j++) {
         current_pos = x_offset+j;
-        if((current_pos >= 0) && (current_pos < ROW_WIDTH)) { //check if horizontal offset is in visible range
+        if((current_pos >= 0) && (current_pos < DISPLAY_WIDTH)) { //check if horizontal offset is in visible range
           current_font_column = pgm_read_byte_near(font_small + c*CHAR_WIDTH_SMALL + j); //returns uint16_t in big endian
           if(y_offset >= 0 && y_offset < 8) { // y_offset 0 to 7: char spans over both bytes of col
             msb_column = current_font_column << y_offset;
@@ -138,7 +146,7 @@ Render a string to the flip-dot with horizontal offset (can be negative)
 void FLIPDOT::render_string(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET) {
     zero_frame_buff();
     while (*str) {
-      if(x_offset >= ROW_WIDTH) { //don't try to render invisible chars
+      if(x_offset >= DISPLAY_WIDTH) { //don't try to render invisible chars
         break;
       } else if(x_offset <= -CHAR_WIDTH) {
         str++;
@@ -157,7 +165,7 @@ Render a string with 8x8 characters to the flip-dot with horizontal and vertical
 void FLIPDOT::render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET) {
     zero_frame_buff();
     while (*str) {
-      if(x_offset >= ROW_WIDTH) { //don't try to render invisible chars
+      if(x_offset >= DISPLAY_WIDTH) { //don't try to render invisible chars
         break;
       } else if(x_offset <= -CHAR_WIDTH_SMALL) {
         str++;
@@ -208,14 +216,14 @@ void FLIPDOT::all_off() {
 zero the internal frame buffer
 */
 void FLIPDOT::zero_frame_buff() {
-  memset(frame_buff, 0, ROW_WIDTH*2); //*2 because memset takes no of bytes
+  memset(frame_buff, 0, DISPLAY_WIDTH*2); //*2 because memset takes no of bytes
 }
 
 /*
 returns true if the frame_buff changed compared to last_frame_buff
 */
 bool FLIPDOT::frame_buff_changed() {
-  for(int i = 0; i < ROW_WIDTH; i++) {
+  for(int i = 0; i < DISPLAY_WIDTH; i++) {
     if(frame_buff[i] != last_frame_buff[i]){
       memcpy(&last_frame_buff, &frame_buff, sizeof(frame_buff));
       return true;
