@@ -67,26 +67,31 @@ void FLIPDOT::writeToRegisters() {
 Render a frame on the board
 */
 void FLIPDOT::render_frame(uint16_t frame[DISPLAY_WIDTH]) {
-  uint8_t current_col = 0;
-  for(int i = 0; i < number_of_panels; i++){
-      uint8_t pin = select_pin_mapping[i];
-      //preprocessor function!
-      initializePanel(pin)
-
-      for (int j = 0; j < panel_configuration[i]; j++) {
-          writeToNewColumn(frame[current_col++],pin) //future optimization: skip columns!
-      }
-  }
-
+    for(uint8_t i = 0; i < number_of_panels; i++){
+        if(frame_buff_changed_for_panel(i)){
+            render_to_panel(frame, i);
+        }
+    }
 }
 
+/*
+Render a frame from given buffer to specified panel
+*/
+void FLIPDOT::render_to_panel(uint16_t* frame, uint8_t panel_index) {
+    const uint8_t pin = select_pin_mapping[panel_index];
+    uint8_t current_col = get_panel_column_offset(panel_index);
+    //preprocessor function!
+    initializePanel(pin)
+
+    for (int j = 0; j < panel_configuration[panel_index]; j++) {
+        writeToNewColumn(frame[current_col++], pin) //future optimization: skip columns!
+    }
+}
 /*
 Render internal frame buffer on the board
 */
 void FLIPDOT::render_internal_framebuffer() {
-  if(frame_buff_changed()){
       render_frame(frame_buff);
-  }
 }
 
 /*
@@ -144,7 +149,7 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset) 
 Render a string to the flip-dot with horizontal offset (can be negative)
 */
 void FLIPDOT::render_string(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET) {
-    zero_frame_buff();
+    set_frame_buff(0);
     while (*str) {
       if(x_offset >= DISPLAY_WIDTH) { //don't try to render invisible chars
         break;
@@ -163,7 +168,7 @@ void FLIPDOT::render_string(const char* str, int x_offset = RENDER_STRING_DEFAUL
 Render a string with 8x8 characters to the flip-dot with horizontal and vertical offset (can be negative)
 */
 void FLIPDOT::render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET) {
-    zero_frame_buff();
+    set_frame_buff(0);
     while (*str) {
       if(x_offset >= DISPLAY_WIDTH) { //don't try to render invisible chars
         break;
@@ -209,25 +214,74 @@ void FLIPDOT::scroll_string_small(const char* str, int x_offset = DEFAULT_SCROLL
 all dots off
 */
 void FLIPDOT::all_off() {
-  writeToAllColumns(0b00000000000000);
+  set_frame_buff(0);
+  render_internal_framebuffer();
 }
 
 /*
-zero the internal frame buffer
+all dots on
 */
-void FLIPDOT::zero_frame_buff() {
-  memset(frame_buff, 0, DISPLAY_WIDTH*2); //*2 because memset takes no of bytes
+void FLIPDOT::all_on() {
+  set_frame_buff(-1);
+  render_internal_framebuffer();
+}
+
+/*
+change a pixel in internal frame buffer at given coordinates
+*/
+void FLIPDOT::draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y){
+  // stupid vodoo because of endianness of uint16_t...
+  if(x < 0 || x > 114) {
+    return;
+  }
+  if(y>7 && y<COL_HEIGHT){
+    if(val == 1){
+      frame_buff[x] |= 1 << (23-y);
+    } else {
+      frame_buff[x] |= ~(1 << (23-y));
+    }
+  } else if(y>=0) {
+    if(val == 1){
+      frame_buff[x] |= 1 << (7-y);
+    } else {
+      frame_buff[x] |= ~(1 << (7-y));
+    }
+  }
+}
+
+/*
+fill the internal frame buffer with given value
+*/
+void FLIPDOT::set_frame_buff(int val) {
+  memset(frame_buff, val, DISPLAY_WIDTH*2);
 }
 
 /*
 returns true if the frame_buff changed compared to last_frame_buff
 */
-bool FLIPDOT::frame_buff_changed() {
-  for(int i = 0; i < DISPLAY_WIDTH; i++) {
+bool FLIPDOT::frame_buff_changed_for_panel(uint8_t panel_index) {
+  const uint8_t column_offset = get_panel_column_offset(panel_index);
+  const uint8_t panel_width = panel_configuration[panel_index];
+  for(int i = column_offset; i < (column_offset+panel_width); i++) {
     if(frame_buff[i] != last_frame_buff[i]){
-      memcpy(&last_frame_buff, &frame_buff, sizeof(frame_buff));
+      uint16_t* ptr = frame_buff;
+      ptr += column_offset;
+      uint16_t* last_ptr = last_frame_buff;
+      last_ptr += column_offset;
+      memcpy(last_ptr, ptr, panel_configuration[panel_index]*2); //*2 for number of bytes
       return true;
     }
   }
   return false;
+}
+
+/*
+returns the offset number for given panels (columns befor the specified panel)
+*/
+uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
+    uint8_t column_offset = 0;
+    for(int i = 0; i < panel_index; i++){
+      column_offset += panel_configuration[i];
+    }
+    return column_offset;
 }
