@@ -12,9 +12,16 @@
 
 #include <inttypes.h>
 #include <Arduino.h>
-#include "SPI.h"
-#include "font.h"
-#include "font8x8.h"
+#include <SPI.h>
+
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    #include "font.h"
+    #include "font8x8.h"
+#else
+    #include "font_non_arduino_hw.h"
+    #include "font8x8_non_arduino_hw.h"
+#endif
+
 
 
 #ifndef FLIPDOT_h
@@ -33,13 +40,16 @@
 #define DEFAULT_SCROLL_X_OFFSET DISPLAY_WIDTH
 #define DEFAULT_SMALL_Y_OFFSET 4
 #define RENDER_STRING_DEFAULT_X_OFFSET 0
+#define DEFAULT_ZEROING_SETTING ZERO_LOCALLY
 
 #define PANEL_CONFIGURATION [5] = {25,25,20,20,25} //widths of panels (either 20 or 25), change arraysize as well!
 #define MAX_NUMBER_OF_PANELS 5
 #define DISPLAY_WIDTH 115
 #define COL_HEIGHT 16
-#define SHIFT_OE_PIN 9
-#define SHIFT_RCK_PIN 3
+//9
+#define SHIFT_OE_PIN D2
+//3
+#define SHIFT_RCK_PIN D3
 
 // Positions in Control Buffer
 // |     7    |     6    |     5    |     4    |     3    |     2    |     1    |     0
@@ -113,26 +123,28 @@
 
 // ---- Methods ----
 
+typedef enum { ZERO_ALL,ZERO_LOCALLY,ZERO_NONE } ZeroOptionsType_t; //make enum accessible outside of class
+
 class FLIPDOT {
 
 public:
   FLIPDOT();
-  void FLIPDOT::init();
-  void FLIPDOT::write_to_all_columns(uint16_t columnData);
-  void FLIPDOT::render_frame(uint16_t frame[DISPLAY_WIDTH]);
-  void FLIPDOT::render_to_panel(uint16_t* frame, uint8_t panel_index);
-  void FLIPDOT::render_string(const char *s, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, bool zero_buffer = true);
-  void FLIPDOT::render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET, bool zero_buffer = true);
-  void FLIPDOT::scroll_string(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS);
-  void FLIPDOT::scroll_string_small(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS, short y_offset = DEFAULT_SMALL_Y_OFFSET);
-  void FLIPDOT::render_char_to_buffer(char c, short x, bool zero_buffer);
-  void FLIPDOT::render_char_to_buffer_small(char c, int x, short y_offset, bool zero_buffer);
-  void FLIPDOT::merge_columns(uint16_t* dest_column, uint16_t* src_column) ;
-  void FLIPDOT::render_internal_framebuffer();
-  void FLIPDOT::draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y);
-  void FLIPDOT::all_off();
-  void FLIPDOT::all_on();
-  uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index);
+  void init();
+  void write_to_all_columns(uint16_t columnData);
+  void render_frame(uint16_t frame[DISPLAY_WIDTH]);
+  void render_to_panel(uint16_t* frame, uint8_t panel_index);
+  void render_string(const char *s, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, ZeroOptionsType_t zero_buffer = DEFAULT_ZEROING_SETTING);
+  void render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET, ZeroOptionsType_t zero_buffer = DEFAULT_ZEROING_SETTING);
+  void scroll_string(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS);
+  void scroll_string_small(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS, short y_offset = DEFAULT_SMALL_Y_OFFSET);
+  void render_char_to_buffer(char c, short x, ZeroOptionsType_t zero_buffer);
+  void render_char_to_buffer_small(char c, int x, short y_offset, ZeroOptionsType_t zero_buffer);
+  void merge_columns(uint16_t* dest_column, const uint16_t* src_column) ;
+  void render_internal_framebuffer();
+  void draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y);
+  void all_off();
+  void all_on();
+  uint8_t get_panel_column_offset(uint8_t panel_index);
 private:
   uint8_t panel_configuration PANEL_CONFIGURATION;
   uint8_t select_pin_mapping[MAX_NUMBER_OF_PANELS] = {SELECT1,SELECT2,SELECT3,SELECT4,SELECT5};
@@ -141,9 +153,10 @@ private:
   uint16_t last_frame_buff[DISPLAY_WIDTH] = {0};
   uint16_t columnBuffer = 0; //holds data of current column pixel data
   byte controlBuffer = 0; //holds data of current control bits (clear, clock, reset, select 1, ... , select 5)
-  void FLIPDOT::writeToRegisters();
-  void FLIPDOT::set_frame_buff(int val);
-  bool FLIPDOT::frame_buff_changed_for_panel(uint8_t panel_index);
+  void writeToRegisters();
+  void set_frame_buff(int val);
+  bool frame_buff_changed_for_panel(uint8_t panel_index);
+  uint16_t font_column_rendering_convert_endianess(uint16_t current_font_column, short y_offset);
 };
 
 #endif

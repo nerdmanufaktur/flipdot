@@ -58,7 +58,17 @@ Write current control and column buffers via SPI to shift registers
 */
 void FLIPDOT::writeToRegisters() {
   SPI.transfer(controlBuffer);
-  SPI.transfer(&columnBuffer, 2); // 2 bytes size
+  #if defined(_ESP8266_SPIFAST)
+  		SPI.write16(columnBuffer);
+  #else
+  		#if defined(_SPI_MULTITRANSFER)
+  		    //last version of ESP8266 for arduino support this
+  		    uint8_t pattern[2] = { (uint8_t)(c >> 8), (uint8_t)(c >> 0) };
+  		    SPI.writePattern(pattern, 2, (uint8_t)1);
+  		#else
+  			 SPI.transfer(columnBuffer >> 8); SPI.transfer(columnBuffer >> 0);
+      #endif
+  #endif
   digitalWrite(SHIFT_RCK_PIN, HIGH);
   digitalWrite(SHIFT_RCK_PIN, LOW);
 }
@@ -72,6 +82,10 @@ void FLIPDOT::render_frame(uint16_t frame[DISPLAY_WIDTH]) {
             render_to_panel(frame, i);
         }
     }
+    //we need to give the esp time to do its wifi stuff every now and then
+    #if !defined(__AVR_ATmega1280__) || !defined(__AVR_ATmega2560__)
+      yield();
+    #endif
 }
 
 /*
@@ -97,14 +111,14 @@ void FLIPDOT::render_internal_framebuffer() {
 /*
 Merges two given columns into the dest_column
 */
-void FLIPDOT::merge_columns(uint16_t* dest_column, uint16_t* src_column) {
+void FLIPDOT::merge_columns(uint16_t* dest_column, const uint16_t* src_column) {
   *dest_column |= *src_column;
 }
 
 /*
 Render a char to the frame_buff with horizontal offset (can be negative)
 */
-void FLIPDOT::render_char_to_buffer(char c, short x_offset, bool zero_buffer) {
+void FLIPDOT::render_char_to_buffer(char c, short x_offset, ZeroOptionsType_t zero_buffer) {
   // Convert the character to an index
   c = (c - 32);
   uint16_t current_font_column;
@@ -114,7 +128,7 @@ void FLIPDOT::render_char_to_buffer(char c, short x_offset, bool zero_buffer) {
     current_pos = x_offset+j;
     if((current_pos >= 0) && (current_pos < DISPLAY_WIDTH)) { //case of negative offset
       current_font_column = pgm_read_word_near(font + c*CHAR_WIDTH + j); //returns uint16_t in big endian
-      if(zero_buffer){
+      if(zero_buffer == ZERO_ALL || zero_buffer == ZERO_LOCALLY){
         frame_buff[current_pos] = current_font_column;
       } else {
         merge_columns(&frame_buff[current_pos],&current_font_column);
@@ -126,12 +140,10 @@ void FLIPDOT::render_char_to_buffer(char c, short x_offset, bool zero_buffer) {
 /*
 Render a char with 8x8 font to the frame_buff with horizontal/vertical offsets (can be negative)
 */
-void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset,  bool zero_buffer) {
+void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset,  ZeroOptionsType_t zero_buffer) {
   // Convert the character to an index
   c = (c - 32);
   uint8_t current_font_column;
-  uint8_t msb_column;
-  uint8_t lsb_column;
   int current_pos;
 
   if((y_offset > -CHAR_HEIGHT_SMALL) && (y_offset < COL_HEIGHT)) { //check if vertical offset is in visible range
@@ -140,18 +152,12 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset, 
         current_pos = x_offset+j;
         if((current_pos >= 0) && (current_pos < DISPLAY_WIDTH)) { //check if horizontal offset is in visible range
           current_font_column = pgm_read_byte_near(font_small + c*CHAR_WIDTH_SMALL + j); //returns uint16_t in big endian
-          if(y_offset >= 0 && y_offset < 8) { // y_offset 0 to 7: char spans over both bytes of col
-            msb_column = current_font_column << y_offset;
-            lsb_column = current_font_column >> (8-y_offset);
-          } else if (y_offset >= 0) { // y_offset 8 to 15: char spans only over lower lsb of col
-            msb_column = 0;
-            lsb_column = current_font_column << (y_offset-8);
-          } else { // y_offset -1 to -7: char spans only over upper msb of col
-            msb_column = current_font_column >> -y_offset;
-            lsb_column = 0;
-          }
-          const uint16_t column_data = msb_column << 8 | lsb_column;  //converting big endian to little endian for correct column formatting
-          if(zero_buffer){
+          #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+              const uint16_t column_data = font_column_rendering_convert_endianess(current_font_column,y_offset);  //converting big endian to little endian for correct column formatting
+          #else
+              const uint16_t column_data = current_font_column << y_offset;
+          #endif
+          if(zero_buffer == ZERO_ALL || zero_buffer == ZERO_LOCALLY){
             frame_buff[current_pos] = column_data;
           } else {
             merge_columns(&frame_buff[current_pos],&column_data);
@@ -164,8 +170,8 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset, 
 /*
 Render a string to the flip-dot with horizontal offset (can be negative)
 */
-void FLIPDOT::render_string(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, bool zero_buffer = true) {
-    if(zero_buffer) {set_frame_buff(0);}
+void FLIPDOT::render_string(const char* str, int x_offset, ZeroOptionsType_t zero_buffer) {
+    if(zero_buffer == ZERO_ALL) {set_frame_buff(0);}
     while (*str) {
       if(x_offset >= DISPLAY_WIDTH) { //don't try to render invisible chars
         break;
@@ -183,8 +189,8 @@ void FLIPDOT::render_string(const char* str, int x_offset = RENDER_STRING_DEFAUL
 /*
 Render a string with 8x8 characters to the flip-dot with horizontal and vertical offset (can be negative)
 */
-void FLIPDOT::render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET, bool zero_buffer = true) {
-    if(zero_buffer) {set_frame_buff(0);}
+void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset, ZeroOptionsType_t zero_buffer) {
+    if(zero_buffer == ZERO_ALL) {set_frame_buff(0);}
     while (*str) {
       if(x_offset >= DISPLAY_WIDTH) { //don't try to render invisible chars
         break;
@@ -203,7 +209,7 @@ void FLIPDOT::render_string_small(const char* str, int x_offset = RENDER_STRING_
 /*
 Scroll a string over the flip-dot
 */
-void FLIPDOT::scroll_string(const char* str, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS) {
+void FLIPDOT::scroll_string(const char* str, int x_offset, int millis_delay) {
     const int str_size = strlen(str);
     const int initial_x_offset = x_offset;
     for(int i = 0; i < (str_size*(CHAR_OFFSET)+initial_x_offset); i++) {
@@ -216,7 +222,7 @@ void FLIPDOT::scroll_string(const char* str, int x_offset = DEFAULT_SCROLL_X_OFF
 /*
 Scroll a small 8x8 font string over the flip-dot
 */
-void FLIPDOT::scroll_string_small(const char* str, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS, short y_offset = DEFAULT_SMALL_Y_OFFSET) {
+void FLIPDOT::scroll_string_small(const char* str, int x_offset, int millis_delay, short y_offset) {
     const int initial_x_offset = x_offset;
     const int str_size = strlen(str);
     for(int i = 0; i < (str_size*(CHAR_OFFSET_SMALL)+initial_x_offset); i++) {
@@ -240,6 +246,25 @@ all dots on
 void FLIPDOT::all_on() {
   set_frame_buff(-1);
   render_internal_framebuffer();
+}
+
+/*
+convert endianness of given data
+*/
+uint16_t FLIPDOT::font_column_rendering_convert_endianess(uint16_t current_font_column, short y_offset) {
+    uint8_t msb_column;
+    uint8_t lsb_column;
+    if(y_offset >= 0 && y_offset < 8) { // y_offset 0 to 7: char spans over both bytes of col
+      msb_column = current_font_column << y_offset;
+      lsb_column = current_font_column >> (8-y_offset);
+    } else if (y_offset >= 0) { // y_offset 8 to 15: char spans only over lower lsb of col
+      msb_column = 0;
+      lsb_column = current_font_column << (y_offset-8);
+    } else { // y_offset -1 to -7: char spans only over upper msb of col
+      msb_column = current_font_column >> -y_offset;
+      lsb_column = 0;
+    }
+    return msb_column << 8 | lsb_column;
 }
 
 /*

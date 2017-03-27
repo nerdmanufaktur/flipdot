@@ -1,6 +1,8 @@
-#include <avr/pgmspace.h>
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    #include <avr/pgmspace.h>
+    #endif
 
-PROGMEM const uint8_t font_small[] = {
+    PROGMEM const uint8_t font_small[] = {
   //  :  0
   0b00000000,
   0b00000000,
