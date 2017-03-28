@@ -41,19 +41,6 @@ uint16_t framebuffer2[25] = {0, 0, 0, 0, 0, 0b1111111111111111, 0b11111111111111
 
 void loop() {
   board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
-  delay(1000);
-    board->all_off();
-  board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
-  delay(1000);
-    board->all_off();
-  board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
-  delay(1000);
-    board->all_off();
-  board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
-  delay(1000);
-    board->all_off();
-  board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
-  delay(1000);
   /*
   board->all_off();
   const float delta = 8*PI/115;
@@ -78,6 +65,7 @@ void loop() {
     board->render_internal_framebuffer();
   }
   delay(1000);*/
+  delay(1000);
   board->all_off();
   delay(1000);
   board->all_on();
@@ -185,21 +173,20 @@ void loop() {
    for (float a = 0; a <= 2 * PI; a += 0.2) {
     int x = 1 + 8 * cos(a);
     int y = 4 + 8 * sin(a);
-    board->render_string_small("12:34\0", x, y, ZERO_ALL);
-    delay(1);
+    board->render_string_small(timer.getFormattedTime(), x, y, ZERO_ALL);
   }
   for (float a = 2 * PI; a >= 0; a -= 0.2) {
     int x = 1 + 8 * cos(a);
     int y = 4 + 8 * sin(a);
-    board->render_string_small("12:34\0", x, y, ZERO_ALL);
+    board->render_string_small(timer.getFormattedTime(), x, y, ZERO_ALL);
   }
 float deg = 0;
   for (float a = 0; a <= 115; a++) {
-    board->render_string_small("12:34\0", a,5.5+5.5*sin(deg),ZERO_NONE);
+    board->render_string_small(timer.getFormattedTime(), a,5.5+5.5*sin(deg),ZERO_NONE);
     deg += 0.2;
   }
   for (float a = 114; a >= 0; a-=1) {
-    board->render_string_small("12:34\0", a, 5.5+5.5*sin(deg));
+    board->render_string_small(timer.getFormattedTime(), a, 5.5+5.5*sin(deg));
     deg -= 0.2;
   }
   board->all_off();
@@ -209,6 +196,7 @@ float deg = 0;
   }
   delay(1000);
   board->write_to_all_columns(0b0000010000000000);
+  board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
   delay(1000);
   
 }
