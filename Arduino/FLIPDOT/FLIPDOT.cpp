@@ -34,31 +34,34 @@ void FLIPDOT::init() {
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV2);
 
-  //Initialize ansynchronous UDP server to listen for incoming frames
-  if(udp.listen(1234)) {
-        Serial.print("UDP Listening on IP: ");
-        Serial.println(WiFi.localIP());
-        udp.onPacket([&](AsyncUDPPacket packet) {
-            Serial.print("UDP Packet Type: ");
-            Serial.print(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast");
-            Serial.print(", From: ");
-            Serial.print(packet.remoteIP());
-            Serial.print(":");
-            Serial.print(packet.remotePort());
-            Serial.print(", To: ");
-            Serial.print(packet.localIP());
-            Serial.print(":");
-            Serial.print(packet.localPort());
-            Serial.print(", Length: ");
-            Serial.print(packet.length());
-            Serial.print(", Data: ");
-            Serial.write(packet.data(), packet.length());
-            Serial.println();
-            //reply to the client
-            packet.printf("Got %u bytes of data", packet.length());
-            FLIPDOT::process_udp_frame(packet.data(), packet.length());
-        });
-    }
+  //only for esp8266
+  #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+    //Initialize ansynchronous UDP server to listen for incoming frames
+    if(udp.listen(1234)) {
+          Serial.print("UDP Listening on IP: ");
+          Serial.println(WiFi.localIP());
+          udp.onPacket([&](AsyncUDPPacket packet) {
+              Serial.print("UDP Packet Type: ");
+              Serial.print(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast");
+              Serial.print(", From: ");
+              Serial.print(packet.remoteIP());
+              Serial.print(":");
+              Serial.print(packet.remotePort());
+              Serial.print(", To: ");
+              Serial.print(packet.localIP());
+              Serial.print(":");
+              Serial.print(packet.localPort());
+              Serial.print(", Length: ");
+              Serial.print(packet.length());
+              Serial.print(", Data: ");
+              Serial.write(packet.data(), packet.length());
+              Serial.println();
+              //reply to the client
+              packet.printf("Got %u bytes of data", packet.length());
+              FLIPDOT::process_udp_frame(packet.data(), packet.length());
+          });
+        }
+    #endif
 }
 
 /*
@@ -358,13 +361,17 @@ uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
     return column_offset;
 }
 
-/*
-processes incoming frame received via ansynchronous udp server
-*/
-void FLIPDOT::process_udp_frame(uint8_t* data, size_t length) {
-  //make sure we got a complete frame
-  if(length == DISPLAY_WIDTH*2){
-    memcpy(frame_buff, data, DISPLAY_WIDTH*2);
-    render_internal_framebuffer();
+
+//only for esp8266
+#if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+  /*
+  processes incoming frame received via ansynchronous udp server
+  */
+  void FLIPDOT::process_udp_frame(uint8_t* data, size_t length) {
+    //make sure we got a complete frame
+    if(length == DISPLAY_WIDTH*2){
+      memcpy(frame_buff, data, DISPLAY_WIDTH*2);
+      render_internal_framebuffer();
+    }
   }
-}
+#endif

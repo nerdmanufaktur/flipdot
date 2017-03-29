@@ -181,16 +181,16 @@ void loop() {
     board->render_string_small(timer.getFormattedTime(), x, y, ZERO_ALL);
   }
 float deg = 0;
-  for (float a = 0; a <= 115; a++) {
+  for (float a = 0; a <= DISPLAY_WIDTH; a++) {
     board->render_string_small(timer.getFormattedTime(), a,5.5+5.5*sin(deg),ZERO_NONE);
     deg += 0.2;
   }
-  for (float a = 114; a >= 0; a-=1) {
+  for (float a = DISPLAY_WIDTH-1; a >= 0; a-=1) {
     board->render_string_small(timer.getFormattedTime(), a, 5.5+5.5*sin(deg));
     deg -= 0.2;
   }
   board->all_off();
-  for (int a = 0; a < 115; a++) {
+  for (int a = 0; a < DISPLAY_WIDTH; a++) {
     board->draw_in_internal_framebuffer(1,a,7); 
     board->render_internal_framebuffer();
   }

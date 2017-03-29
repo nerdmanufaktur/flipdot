@@ -13,8 +13,6 @@
 #include <inttypes.h>
 #include <Arduino.h>
 #include <SPI.h>
-#include <ESP8266WiFi.h>
-#include "ESPAsyncUDP.h"
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
     #include "font.h"
@@ -22,6 +20,8 @@
 #else
     #include "font_non_arduino_hw.h"
     #include "font8x8_non_arduino_hw.h"
+    #include <ESP8266WiFi.h>
+    #include "ESPAsyncUDP.h"
 #endif
 
 
@@ -162,7 +162,10 @@ private:
   void set_frame_buff(int val);
   bool frame_buff_changed_for_panel(uint8_t panel_index);
   uint16_t font_column_rendering_convert_endianess(uint16_t current_font_column, short y_offset);
-  void process_udp_frame(uint8_t* data, size_t length);
+  //only for esp8266
+  #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+    void process_udp_frame(uint8_t* data, size_t length);
+  #endif
 };
 
 #endif
