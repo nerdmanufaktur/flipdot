@@ -33,6 +33,32 @@ void FLIPDOT::init() {
   SPI.setDataMode(SPI_MODE0);
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV2);
+
+  //Initialize ansynchronous UDP server to listen for incoming frames
+  if(udp.listen(1234)) {
+        Serial.print("UDP Listening on IP: ");
+        Serial.println(WiFi.localIP());
+        udp.onPacket([&](AsyncUDPPacket packet) {
+            Serial.print("UDP Packet Type: ");
+            Serial.print(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast");
+            Serial.print(", From: ");
+            Serial.print(packet.remoteIP());
+            Serial.print(":");
+            Serial.print(packet.remotePort());
+            Serial.print(", To: ");
+            Serial.print(packet.localIP());
+            Serial.print(":");
+            Serial.print(packet.localPort());
+            Serial.print(", Length: ");
+            Serial.print(packet.length());
+            Serial.print(", Data: ");
+            Serial.write(packet.data(), packet.length());
+            Serial.println();
+            //reply to the client
+            packet.printf("Got %u bytes of data", packet.length());
+            FLIPDOT::process_udp_frame(packet.data(), packet.length());
+        });
+    }
 }
 
 /*
@@ -57,6 +83,7 @@ void FLIPDOT::write_to_all_columns(uint16_t columnData) {
 Write current control and column buffers via SPI to shift registers
 */
 void FLIPDOT::writeToRegisters() {
+  noInterrupts();
   SPI.transfer(controlBuffer);
   #if defined(_ESP8266_SPIFAST)
   		SPI.write16(columnBuffer);
@@ -71,6 +98,7 @@ void FLIPDOT::writeToRegisters() {
   #endif
   digitalWrite(SHIFT_RCK_PIN, HIGH);
   digitalWrite(SHIFT_RCK_PIN, LOW);
+  interrupts();
 }
 
 /*
@@ -94,12 +122,14 @@ Render a frame from given buffer to specified panel
 void FLIPDOT::render_to_panel(uint16_t* frame, uint8_t panel_index) {
     const uint8_t pin = select_pin_mapping[panel_index];
     uint8_t current_col = get_panel_column_offset(panel_index);
+    noInterrupts();
     //preprocessor function!
     initializePanel(pin)
 
     for (int j = 0; j < panel_configuration[panel_index]; j++) {
         writeToNewColumn(frame[current_col++], pin) //future optimization: skip columns!
     }
+    interrupts();
 }
 /*
 Render internal frame buffer on the board
@@ -152,6 +182,7 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset, 
         current_pos = x_offset+j;
         if((current_pos >= 0) && (current_pos < DISPLAY_WIDTH)) { //check if horizontal offset is in visible range
           current_font_column = pgm_read_byte_near(font_small + c*CHAR_WIDTH_SMALL + j); //returns uint16_t in big endian
+          //endianess is diffrent on ESP8266 boards
           #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
               const uint16_t column_data = font_column_rendering_convert_endianess(current_font_column,y_offset);  //converting big endian to little endian for correct column formatting
           #else
@@ -325,4 +356,15 @@ uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
       column_offset += panel_configuration[i];
     }
     return column_offset;
+}
+
+/*
+processes incoming frame received via ansynchronous udp server
+*/
+void FLIPDOT::process_udp_frame(uint8_t* data, size_t length) {
+  //make sure we got a complete frame
+  if(length == DISPLAY_WIDTH*2){
+    memcpy(frame_buff, data, DISPLAY_WIDTH*2);
+    render_internal_framebuffer();
+  }
 }

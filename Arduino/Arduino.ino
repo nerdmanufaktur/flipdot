@@ -11,7 +11,7 @@
 // - - - -
 #include <ESP8266WiFi.h>
 #include <FLIPDOT.h>
-#include "ESPTime.h"
+#include <ESPTime.h>
 
 const char* ssid = "Mettigel24.de | Get off my LAN";
 const char* password = "N00bznet?NoWay!";

@@ -13,6 +13,8 @@
 #include <inttypes.h>
 #include <Arduino.h>
 #include <SPI.h>
+#include <ESP8266WiFi.h>
+#include "ESPAsyncUDP.h"
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
     #include "font.h"
@@ -35,7 +37,6 @@
 #define CHAR_WIDTH_SMALL 8
 #define CHAR_HEIGHT_SMALL 8
 #define CHAR_OFFSET_SMALL CHAR_WIDTH_SMALL - 3
-
 #define DEFAULT_SCROLL_DELAY_MILLISECONDS 0
 #define DEFAULT_SCROLL_X_OFFSET DISPLAY_WIDTH
 #define DEFAULT_SMALL_Y_OFFSET 4
@@ -123,7 +124,10 @@
 
 // ---- Methods ----
 
-typedef enum { ZERO_ALL,ZERO_LOCALLY,ZERO_NONE } ZeroOptionsType_t; //make enum accessible outside of class
+//ZERO_ALL => zero the entire buffer before rendering
+//ZERO_LOCALLY => zero the entire column if something is rendered on it, leave remaining columns as before
+//ZERO_NONE => don't zero anything, just merge the previous pixel state with the additional pixels
+typedef enum { ZERO_ALL,ZERO_LOCALLY,ZERO_NONE } ZeroOptionsType_t;
 
 class FLIPDOT {
 
@@ -153,10 +157,12 @@ private:
   uint16_t last_frame_buff[DISPLAY_WIDTH] = {0};
   uint16_t columnBuffer = 0; //holds data of current column pixel data
   byte controlBuffer = 0; //holds data of current control bits (clear, clock, reset, select 1, ... , select 5)
+  AsyncUDP udp;
   void writeToRegisters();
   void set_frame_buff(int val);
   bool frame_buff_changed_for_panel(uint8_t panel_index);
   uint16_t font_column_rendering_convert_endianess(uint16_t current_font_column, short y_offset);
+  void process_udp_frame(uint8_t* data, size_t length);
 };
 
 #endif
