@@ -28,8 +28,13 @@
   #include "font8x8_non_arduino_hw.h"
   #include <ESP8266WiFi.h>
   #include "ESPAsyncUDP.h"
-  #define SHIFT_OE_PIN D2
-  #define SHIFT_RCK_PIN D3
+  #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+    #define SHIFT_OE_PIN D2
+    #define SHIFT_RCK_PIN D3
+  #else
+    #define SHIFT_OE_PIN 9
+    #define SHIFT_RCK_PIN 3
+  #endif
 #else
     #include "font.h"
     #include "font8x8.h"
