@@ -23,21 +23,19 @@
 #include "bitreverse_table.h"
 
 //Arduino hw vs. ESP8266
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#if defined(ESP8266)
+  #include "font_non_arduino_hw.h"
+  #include "font8x8_non_arduino_hw.h"
+  #include <ESP8266WiFi.h>
+  #include "ESPAsyncUDP.h"
+  #define SHIFT_OE_PIN D2
+  #define SHIFT_RCK_PIN D3
+#else
     #include "font.h"
     #include "font8x8.h"
     #define SHIFT_OE_PIN 9
     #define SHIFT_RCK_PIN 3
-#else
-    #include "font_non_arduino_hw.h"
-    #include "font8x8_non_arduino_hw.h"
-    #include <ESP8266WiFi.h>
-    #include "ESPAsyncUDP.h"
-    #define SHIFT_OE_PIN D2
-    #define SHIFT_RCK_PIN D3
 #endif
-
-
 
 #ifndef FLIPDOT_h
 #define FLIPDOT_h
@@ -186,7 +184,7 @@ private:
   uint16_t font_column_rendering_convert_endianess(uint16_t current_font_column, short y_offset);
 
   //only for esp8266
-  #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+  #if defined(ESP8266)
     AsyncUDP udp;
     void process_udp_frame(uint8_t* data, size_t length);
   #endif

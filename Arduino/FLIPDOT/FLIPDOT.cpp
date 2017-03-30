@@ -34,7 +34,7 @@ void FLIPDOT::init() {
   SPI.setClockDivider(SPI_CLOCK_DIV2);
 
   //only for esp8266
-  #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+  #if defined(ESP8266)
     //Initialize ansynchronous UDP server to listen for incoming frames
     if(udp.listen(UDP_PORT_FRAME_SERVER)) {
           DBG_OUTPUT_PORT("UDP Listening on IP: ")
@@ -98,7 +98,7 @@ void FLIPDOT::render_frame(uint16_t frame[DISPLAY_WIDTH]) {
         if(frame_buff_changed_for_panel(i)){
             render_to_panel(frame, i);
             //only for esp8266, give it time to do fancy networking stuff
-            #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+            #if defined(ESP8266)
               yield();
             #endif
         }
@@ -201,10 +201,10 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset, 
         if((current_pos >= 0) && (current_pos < DISPLAY_WIDTH)) { //check if horizontal offset is in visible range
           current_font_column = pgm_read_byte_near(font_small + c*CHAR_WIDTH_SMALL + j); //returns uint16_t in big endian
           //endianess is diffrent on ESP8266 boards
-          #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-              const uint16_t column_data = font_column_rendering_convert_endianess(current_font_column,y_offset);  //converting big endian to little endian for correct column formatting
-          #else
+          #if defined(ESP8266)
               const uint16_t column_data = current_font_column << y_offset;
+          #else
+              const uint16_t column_data = font_column_rendering_convert_endianess(current_font_column,y_offset);  //converting big endian to little endian for correct column formatting
           #endif
           if(zero_buffer == ZERO_ALL || zero_buffer == ZERO_LOCALLY){
             frame_buff[current_pos] = column_data;
@@ -386,7 +386,7 @@ uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
 }
 
 //only for esp8266
-#if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+#if defined(ESP8266)
   /*
   processes incoming frame received via ansynchronous udp server
   */

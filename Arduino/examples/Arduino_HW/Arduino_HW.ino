@@ -11,6 +11,14 @@
 // - - - -
 #include <FLIPDOT.h>
 
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#include <FLIPDOT.h>
+#include <ESPTime.h>
+
+#define SSID "Mettigel24.de | Get off my LAN"
+#define PASSWORD "N00bznet?NoWay!"
+#endif
 FLIPDOT *board = new FLIPDOT();
 
 void setup() {
