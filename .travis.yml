@@ -1,0 +1,24 @@
+language: python
+python:
+    - "2.7"
+
+# Cache PlatformIO packages using Travis CI container-based infrastructure
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+env:
+    - PLATFORMIO_CI_SRC=Arduino/Arduino.ino
+    - PLATFORMIO_CI_SRC=Arduino
+
+install:
+    - pip install -U platformio
+    - cp -R Arduino/ESPAsyncUDP /tmp/
+    - cp -R Arduino/ESPTIME /tmp/
+    - cp -R Arduino/FLIPDOT /tmp/
+    - cp -R Arduino/Time /tmp/
+    - cp -R Arduino/Timezone /tmp/
+
+script:
+    - platformio ci -lib="/tmp/ESPAsyncUDP" -lib="/tmp/ESPTIME" -lib="/tmp/FLIPDOT" -lib="/tmp/Time" -lib="/tmp/Timezone" --board=d1_mini --board=uno
