@@ -21,4 +21,4 @@ install:
     - cp -R Arduino/Timezone /tmp/
 
 script:
-    - make travis-build
+    - platformio $PLATFORMIO_CI_EXTRA_ARGS
