@@ -13,16 +13,15 @@
 #include <FLIPDOT.h>
 #include <ESPTime.h>
 
-const char* ssid = "Mettigel24.de | Get off my LAN";
-const char* password = "N00bznet?NoWay!";
+#define SSID "Mettigel24.de | Get off my LAN"
+#define PASSWORD "N00bznet?NoWay!"
 
 FLIPDOT *board = new FLIPDOT();
 ESPTime timer = ESPTime();
 
 void setup() {
-  board->init(); //must come first to avoid error state of board
   Serial.begin(115200);
-  WiFi.begin(ssid, password);
+  WiFi.begin(SSID, PASSWORD);
   while (WiFi.status() != WL_CONNECTED){
     delay(500);
     Serial.print(".");
@@ -30,6 +29,7 @@ void setup() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  board->init(); //should come after wifi is connected on ESP8266
 }
 
 uint16_t framebuffer[25] = {0, 0b0000001110000000, 0b0000011111000000, 0b0000111111100000, 0b0001111111110000, 0b0011111111111000, 0b0011111111111000, 0b0011111111111000,
@@ -40,31 +40,9 @@ uint16_t framebuffer[25] = {0, 0b0000001110000000, 0b0000011111000000, 0b0000111
 uint16_t framebuffer2[25] = {0, 0, 0, 0, 0, 0b1111111111111111, 0b1111111111111111, 0b1111111111111111, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b0000001110000000, 0b1111111111111111, 0b1111111111111111, 0b1111111111111111, 0, 0, 0, 0, 0};
 
 void loop() {
-  board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
-  /*
-  board->all_off();
-  const float delta = 8*PI/115;
-  float rad = 0;
-  for (float a = 0; a < 115; a++) {
-    float val = 7.6+7.6*sin(rad);
-    board->draw_in_internal_framebuffer(1,a,val); 
-    board->render_internal_framebuffer();
-    rad += delta;
-  }
-  rad = 0;
-  for (float a = 0; a < 115; a++) {
-    float val = 7.6+7.6*cos(rad);
-    board->draw_in_internal_framebuffer(1,a,val); 
-    board->render_internal_framebuffer();
-    rad += delta;
-  }*/
-  /*
+  board->render_string("4444\0");
   delay(1000);
-  for (uint8_t a = 114; a >= 0; a-=1) {
-    board->draw_in_internal_framebuffer(1,a,a%15); 
-    board->render_internal_framebuffer();
-  }
-  delay(1000);*/
+  board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
   delay(1000);
   board->all_off();
   delay(1000);
@@ -195,8 +173,6 @@ float deg = 0;
     board->render_internal_framebuffer();
   }
   delay(1000);
-  board->write_to_all_columns(0b0000010000000000);
   board->render_string(timer.getFormattedTime(), 4, ZERO_ALL);
   delay(1000);
-  
 }

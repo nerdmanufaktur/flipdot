@@ -10,18 +10,31 @@
 // Documentation and samples are available at https://github.com/nerdmanufaktur/flipdot
 // - - - - -
 
+// ---- Options ----
+//flip screen? comment out for deactivating and vice versa
+#define TURNDISPLAY_180_DEGREES
+
+//comment out to disable debugging information via Serial
+//#define DBG
+
 #include <inttypes.h>
 #include <Arduino.h>
 #include <SPI.h>
+#include "bitreverse_table.h"
 
+//Arduino hw vs. ESP8266
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
     #include "font.h"
     #include "font8x8.h"
+    #define SHIFT_OE_PIN 9
+    #define SHIFT_RCK_PIN 3
 #else
     #include "font_non_arduino_hw.h"
     #include "font8x8_non_arduino_hw.h"
     #include <ESP8266WiFi.h>
     #include "ESPAsyncUDP.h"
+    #define SHIFT_OE_PIN D2
+    #define SHIFT_RCK_PIN D3
 #endif
 
 
@@ -30,6 +43,8 @@
 #define FLIPDOT_h
 
 // ---- Constants/Preprocessor functions ----
+
+#define UDP_PORT_FRAME_SERVER 1234
 
 #define CHAR_WIDTH 16
 #define CHAR_HEIGHT 16
@@ -43,14 +58,11 @@
 #define RENDER_STRING_DEFAULT_X_OFFSET 0
 #define DEFAULT_ZEROING_SETTING ZERO_LOCALLY
 
-#define PANEL_CONFIGURATION [5] = {25,25,20,20,25} //widths of panels (either 20 or 25), change arraysize as well!
+//#define PANEL_CONFIGURATION [5] = {25,25,20,20,25} //widths of panels (either 20 or 25), change arraysize as well!
+#define PANEL_CONFIGURATION [1] = {25}
 #define MAX_NUMBER_OF_PANELS 5
-#define DISPLAY_WIDTH 115
+#define DISPLAY_WIDTH 25
 #define COL_HEIGHT 16
-//9
-#define SHIFT_OE_PIN D2
-//3
-#define SHIFT_RCK_PIN D3
 
 // Positions in Control Buffer
 // |     7    |     6    |     5    |     4    |     3    |     2    |     1    |     0
@@ -68,6 +80,16 @@
 #define SELECT5 0
 
 #define ALL_COLUMN_PIXELS_ON 0b1111111111111111
+
+#if defined(DBG)
+  #include "Streaming.h"
+  #include <bitset>
+  #define DBG_OUTPUT_PORT(data) Serial.print(data);
+  #define DBG_OUTPUT_PORT_NL(data) Serial.println(data);
+#else
+  #define DBG_OUTPUT_PORT(data)
+  #define DBG_OUTPUT_PORT_NL(data)
+#endif
 
 //sets the control bits in controlBuffer, select for all pins is 1 and for pin select_number it is set to select_value
 #define setControlBits(clr,clk,rst,select_value, select_number) controlBuffer =  (clr << CLEAR) | (clk << CLOCK) | (rst << RESET) | (1 << SELECT1) | \
@@ -134,7 +156,6 @@ class FLIPDOT {
 public:
   FLIPDOT();
   void init();
-  void write_to_all_columns(uint16_t columnData);
   void render_frame(uint16_t frame[DISPLAY_WIDTH]);
   void render_to_panel(uint16_t* frame, uint8_t panel_index);
   void render_string(const char *s, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, ZeroOptionsType_t zero_buffer = DEFAULT_ZEROING_SETTING);
@@ -157,13 +178,14 @@ private:
   uint16_t last_frame_buff[DISPLAY_WIDTH] = {0};
   uint16_t columnBuffer = 0; //holds data of current column pixel data
   byte controlBuffer = 0; //holds data of current control bits (clear, clock, reset, select 1, ... , select 5)
-  AsyncUDP udp;
   void writeToRegisters();
   void set_frame_buff(int val);
   bool frame_buff_changed_for_panel(uint8_t panel_index);
   uint16_t font_column_rendering_convert_endianess(uint16_t current_font_column, short y_offset);
+
   //only for esp8266
   #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+    AsyncUDP udp;
     void process_udp_frame(uint8_t* data, size_t length);
   #endif
 };

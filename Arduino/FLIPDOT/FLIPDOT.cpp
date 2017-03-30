@@ -13,11 +13,13 @@
 /* ----- LIBRARIES ----- */
 #include "FLIPDOT.h"
 
-
 /*
 Initialize to set the pin mapping as described above
 */
 FLIPDOT::FLIPDOT() {
+  pinMode(SHIFT_RCK_PIN, OUTPUT);
+  pinMode(SHIFT_OE_PIN, OUTPUT);
+  digitalWrite(SHIFT_OE_PIN, LOW); // output shift register values
   number_of_panels = sizeof(panel_configuration)/sizeof(panel_configuration[0]);
 }
 
@@ -25,9 +27,6 @@ FLIPDOT::FLIPDOT() {
 Initialize all pins and getting the SPI ready to rock!
 */
 void FLIPDOT::init() {
-  pinMode(SHIFT_RCK_PIN, OUTPUT);
-  pinMode(SHIFT_OE_PIN, OUTPUT);
-  digitalWrite(SHIFT_OE_PIN, LOW); // output shift register values
 
   SPI.begin();
   SPI.setDataMode(SPI_MODE0);
@@ -37,49 +36,38 @@ void FLIPDOT::init() {
   //only for esp8266
   #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
     //Initialize ansynchronous UDP server to listen for incoming frames
-    if(udp.listen(1234)) {
-          Serial.print("UDP Listening on IP: ");
-          Serial.println(WiFi.localIP());
+    if(udp.listen(UDP_PORT_FRAME_SERVER)) {
+          DBG_OUTPUT_PORT("UDP Listening on IP: ")
+          DBG_OUTPUT_PORT(WiFi.localIP())
+          DBG_OUTPUT_PORT(" Port:")
+          DBG_OUTPUT_PORT_NL(UDP_PORT_FRAME_SERVER)
           udp.onPacket([&](AsyncUDPPacket packet) {
-              Serial.print("UDP Packet Type: ");
-              Serial.print(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast");
-              Serial.print(", From: ");
-              Serial.print(packet.remoteIP());
-              Serial.print(":");
-              Serial.print(packet.remotePort());
-              Serial.print(", To: ");
-              Serial.print(packet.localIP());
-              Serial.print(":");
-              Serial.print(packet.localPort());
-              Serial.print(", Length: ");
-              Serial.print(packet.length());
-              Serial.print(", Data: ");
-              Serial.write(packet.data(), packet.length());
-              Serial.println();
-              //reply to the client
-              packet.printf("Got %u bytes of data", packet.length());
+              DBG_OUTPUT_PORT("UDP Packet Type: ")
+              DBG_OUTPUT_PORT(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast")
+              DBG_OUTPUT_PORT(", From: ")
+              DBG_OUTPUT_PORT(packet.remoteIP())
+              DBG_OUTPUT_PORT(":")
+              DBG_OUTPUT_PORT(packet.remotePort())
+              DBG_OUTPUT_PORT(", To: ")
+              DBG_OUTPUT_PORT(packet.localIP())
+              DBG_OUTPUT_PORT(":")
+              DBG_OUTPUT_PORT(packet.localPort())
+              DBG_OUTPUT_PORT(", Length: ")
+              DBG_OUTPUT_PORT(packet.length())
+              DBG_OUTPUT_PORT(", Data: ")
+              DBG_OUTPUT_PORT_NL()
+              #if defined(DBG)
+                Serial.write(packet.data(), packet.length());
+                //reply to the client
+                packet.printf("Got %u bytes of data", packet.length());
+              #endif
               FLIPDOT::process_udp_frame(packet.data(), packet.length());
           });
         }
     #endif
-}
 
-/*
-write given column to all columns on panel
-*/
-void FLIPDOT::write_to_all_columns(uint16_t columnData) {
-
-    for(int i = 0; i < number_of_panels; i++){
-        uint8_t pin = select_pin_mapping[i];
-        //preprocessor function!
-        initializePanel(pin)
-
-        for (int j = 0; j < panel_configuration[i]; j++) {
-          //preprocessor function!
-          writeToNewColumn(columnData,pin)
-        }
-
-    }
+    DBG_OUTPUT_PORT("Initialized FLIPDOT. Calculated no of panels: ")
+    DBG_OUTPUT_PORT_NL(number_of_panels)
 }
 
 /*
@@ -113,10 +101,6 @@ void FLIPDOT::render_frame(uint16_t frame[DISPLAY_WIDTH]) {
             render_to_panel(frame, i);
         }
     }
-    //we need to give the esp time to do its wifi stuff every now and then
-    #if !defined(__AVR_ATmega1280__) || !defined(__AVR_ATmega2560__)
-      yield();
-    #endif
 }
 
 /*
@@ -124,14 +108,30 @@ Render a frame from given buffer to specified panel
 */
 void FLIPDOT::render_to_panel(uint16_t* frame, uint8_t panel_index) {
     const uint8_t pin = select_pin_mapping[panel_index];
-    uint8_t current_col = get_panel_column_offset(panel_index);
+    const uint8_t col_start = get_panel_column_offset(panel_index);
     noInterrupts();
     //preprocessor function!
     initializePanel(pin)
 
-    for (int j = 0; j < panel_configuration[panel_index]; j++) {
-        writeToNewColumn(frame[current_col++], pin) //future optimization: skip columns!
+    #if defined(TURNDISPLAY_180_DEGREES)
+    for (int current_col = col_start + panel_configuration[panel_index]-1; current_col >= col_start; current_col -= 1) {
+        uint8_t a = frame[current_col];
+        uint8_t b = frame[current_col] >> 8;
+        uint16_t col = BitReverseTable256[a] << 8 | BitReverseTable256[b] << 0;
+    #else
+    for (uint8_t current_col = col_start; current_col < col_start + panel_configuration[panel_index]; current_col++) {
+        uint16_t col = frame[current_col];
+    #endif
+        DBG_OUTPUT_PORT_NL(std::bitset<16>(col).to_string().c_str());
+        DBG_OUTPUT_PORT("Index current_col: ")
+        DBG_OUTPUT_PORT_NL(current_col)
+        writeToNewColumn(col, pin) //future optimization: skip columns!
     }
+    DBG_OUTPUT_PORT_NL()
+    //only for esp8266, give it time to do fancy networking stuff
+    #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+      yield();
+    #endif
     interrupts();
 }
 /*
@@ -205,6 +205,8 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset, 
 Render a string to the flip-dot with horizontal offset (can be negative)
 */
 void FLIPDOT::render_string(const char* str, int x_offset, ZeroOptionsType_t zero_buffer) {
+    DBG_OUTPUT_PORT("Render string: ")
+    DBG_OUTPUT_PORT_NL(str)
     if(zero_buffer == ZERO_ALL) {set_frame_buff(0);}
     while (*str) {
       if(x_offset >= DISPLAY_WIDTH) { //don't try to render invisible chars
@@ -224,6 +226,8 @@ void FLIPDOT::render_string(const char* str, int x_offset, ZeroOptionsType_t zer
 Render a string with 8x8 characters to the flip-dot with horizontal and vertical offset (can be negative)
 */
 void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset, ZeroOptionsType_t zero_buffer) {
+    DBG_OUTPUT_PORT("Render string small: ")
+    DBG_OUTPUT_PORT_NL(str)
     if(zero_buffer == ZERO_ALL) {set_frame_buff(0);}
     while (*str) {
       if(x_offset >= DISPLAY_WIDTH) { //don't try to render invisible chars
@@ -244,6 +248,8 @@ void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset,
 Scroll a string over the flip-dot
 */
 void FLIPDOT::scroll_string(const char* str, int x_offset, int millis_delay) {
+    DBG_OUTPUT_PORT("Scroll string: ")
+    DBG_OUTPUT_PORT_NL(str)
     const int str_size = strlen(str);
     const int initial_x_offset = x_offset;
     for(int i = 0; i < (str_size*(CHAR_OFFSET)+initial_x_offset); i++) {
@@ -257,6 +263,8 @@ void FLIPDOT::scroll_string(const char* str, int x_offset, int millis_delay) {
 Scroll a small 8x8 font string over the flip-dot
 */
 void FLIPDOT::scroll_string_small(const char* str, int x_offset, int millis_delay, short y_offset) {
+    DBG_OUTPUT_PORT("Scroll string small: ")
+    DBG_OUTPUT_PORT_NL(str)
     const int initial_x_offset = x_offset;
     const int str_size = strlen(str);
     for(int i = 0; i < (str_size*(CHAR_OFFSET_SMALL)+initial_x_offset); i++) {
@@ -305,6 +313,7 @@ uint16_t FLIPDOT::font_column_rendering_convert_endianess(uint16_t current_font_
 change a pixel in internal frame buffer at given coordinates
 */
 void FLIPDOT::draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y){
+  DBG_OUTPUT_PORT_NL("Drawing in internal framebuffer: ")
   // stupid vodoo because of endianness of uint16_t...
   if(x < 0 || x > 114) {
     return;
@@ -361,7 +370,6 @@ uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
     return column_offset;
 }
 
-
 //only for esp8266
 #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
   /*
@@ -370,6 +378,7 @@ uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
   void FLIPDOT::process_udp_frame(uint8_t* data, size_t length) {
     //make sure we got a complete frame
     if(length == DISPLAY_WIDTH*2){
+      DBG_OUTPUT_PORT_NL("Rendering UDP server frame")
       memcpy(frame_buff, data, DISPLAY_WIDTH*2);
       render_internal_framebuffer();
     }

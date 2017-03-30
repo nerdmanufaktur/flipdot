@@ -57,6 +57,15 @@ class ESPTime
     std::string getFormattedDigits(int digits);
 };
 
-#define DBG_OUTPUT_PORT Serial
+//comment out to disable debugging
+//#define DBG
+
+#if defined(DBG)
+  #include "Streaming.h"
+  #define DBG_OUTPUT_PORT(data) Serial data;
+#else
+  #define DBG_OUTPUT_PORT(data) ;
+#endif
+
 
 #endif
