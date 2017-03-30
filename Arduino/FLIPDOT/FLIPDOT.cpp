@@ -74,7 +74,6 @@ void FLIPDOT::init() {
 Write current control and column buffers via SPI to shift registers
 */
 void FLIPDOT::writeToRegisters() {
-  noInterrupts();
   SPI.transfer(controlBuffer);
   #if defined(_ESP8266_SPIFAST)
   		SPI.write16(columnBuffer);
@@ -89,7 +88,6 @@ void FLIPDOT::writeToRegisters() {
   #endif
   digitalWrite(SHIFT_RCK_PIN, HIGH);
   digitalWrite(SHIFT_RCK_PIN, LOW);
-  interrupts();
 }
 
 /*
@@ -99,8 +97,30 @@ void FLIPDOT::render_frame(uint16_t frame[DISPLAY_WIDTH]) {
     for(uint8_t i = 0; i < number_of_panels; i++){
         if(frame_buff_changed_for_panel(i)){
             render_to_panel(frame, i);
+            //only for esp8266, give it time to do fancy networking stuff
+            #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
+              yield();
+            #endif
         }
     }
+}
+
+/*
+Render a frame on the board without using yield to avoid exceptions when the heap is full
+*/
+void FLIPDOT::render_frame_no_yield(uint16_t frame[DISPLAY_WIDTH]) {
+    for(uint8_t i = 0; i < number_of_panels; i++){
+        if(frame_buff_changed_for_panel(i)){
+            render_to_panel(frame, i);
+        }
+    }
+}
+
+/*
+Render internal frame buffer on the board without using yield to avoid exceptions when the heap is full
+*/
+void FLIPDOT::render_internal_framebuffer_no_yield() {
+      render_frame_no_yield(frame_buff);
 }
 
 /*
@@ -109,7 +129,6 @@ Render a frame from given buffer to specified panel
 void FLIPDOT::render_to_panel(uint16_t* frame, uint8_t panel_index) {
     const uint8_t pin = select_pin_mapping[panel_index];
     const uint8_t col_start = get_panel_column_offset(panel_index);
-    noInterrupts();
     //preprocessor function!
     initializePanel(pin)
 
@@ -128,12 +147,8 @@ void FLIPDOT::render_to_panel(uint16_t* frame, uint8_t panel_index) {
         writeToNewColumn(col, pin) //future optimization: skip columns!
     }
     DBG_OUTPUT_PORT_NL()
-    //only for esp8266, give it time to do fancy networking stuff
-    #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
-      yield();
-    #endif
-    interrupts();
 }
+
 /*
 Render internal frame buffer on the board
 */
@@ -380,7 +395,7 @@ uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
     if(length == DISPLAY_WIDTH*2){
       DBG_OUTPUT_PORT_NL("Rendering UDP server frame")
       memcpy(frame_buff, data, DISPLAY_WIDTH*2);
-      render_internal_framebuffer();
+      render_internal_framebuffer_no_yield();
     }
   }
 #endif

@@ -179,6 +179,8 @@ private:
   uint16_t columnBuffer = 0; //holds data of current column pixel data
   byte controlBuffer = 0; //holds data of current control bits (clear, clock, reset, select 1, ... , select 5)
   void writeToRegisters();
+  void render_frame_no_yield(uint16_t frame[DISPLAY_WIDTH]);
+  void render_internal_framebuffer_no_yield();
   void set_frame_buff(int val);
   bool frame_buff_changed_for_panel(uint8_t panel_index);
   uint16_t font_column_rendering_convert_endianess(uint16_t current_font_column, short y_offset);
