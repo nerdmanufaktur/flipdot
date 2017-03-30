@@ -21,6 +21,7 @@ ESPTime timer = ESPTime();
 
 void setup() {
   Serial.begin(115200);
+  WiFi.hostname("Flip-Dot");
   WiFi.begin(SSID, PASSWORD);
   while (WiFi.status() != WL_CONNECTED){
     delay(500);
