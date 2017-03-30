@@ -21,4 +21,4 @@ install:
     - cp -R Arduino/Timezone /tmp/
 
 script:
-    - platformio $PLATFORMIO_CI_EXTRA_ARGS
+    - platformio ci $PLATFORMIO_CI_EXTRA_ARGS
