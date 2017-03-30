@@ -21,4 +21,4 @@ install:
     - cp -R Arduino/Timezone /tmp/
 
 script:
-    - platformio ci -lib="/tmp/ESPAsyncUDP" -lib="/tmp/ESPTIME" -lib="/tmp/FLIPDOT" -lib="/tmp/Time" -lib="/tmp/Timezone" --board=d1_mini --board=uno
+    - platformio ci --lib="/tmp/ESPAsyncUDP" --lib="/tmp/ESPTIME" --lib="/tmp/FLIPDOT" --lib="/tmp/Time" --lib="/tmp/Timezone" --board=d1_mini --board=uno
