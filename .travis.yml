@@ -9,8 +9,8 @@ cache:
         - "~/.platformio"
 
 env:
-    - PLATFORMIO_CI_SRC=Arduino/examples/Wemos/Wemos.ino PLATFORMIO_CI_EXTRA_ARGS="--lib='/tmp/ESPAsyncUDP' --lib='/tmp/ESPTIME' --lib='/tmp/FLIPDOT' --lib='/tmp/Time' --lib='/tmp/Timezone' --board=d1_mini"
-    - PLATFORMIO_CI_SRC=Arduino/examples/Arduino_HW/Arduino_HW.ino PLATFORMIO_CI_EXTRA_ARGS=""--lib='/tmp/FLIPDOT' --board=uno"
+    - PLATFORMIO_CI_SRC=Arduino/examples/Wemos/Wemos.ino PLATFORMIO_CI_EXTRA_ARGS="--lib=/tmp/ESPAsyncUDP --lib=/tmp/ESPTIME --lib=/tmp/FLIPDOT --lib=/tmp/Time --lib=/tmp/Timezone --board=d1_mini"
+    - PLATFORMIO_CI_SRC=Arduino/examples/Arduino_HW/Arduino_HW.ino PLATFORMIO_CI_EXTRA_ARGS="--lib=/tmp/FLIPDOT --board=uno"
 
 install:
     - pip install -U platformio
