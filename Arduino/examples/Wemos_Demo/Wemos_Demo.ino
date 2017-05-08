@@ -55,7 +55,7 @@ int mode = SHOW_CLOCK;
 
 void loop() {
   switch(mode)
-  {game.start_game();
+  {
     case SNAKE_INIT:
         snake_start_animations();
         break;
@@ -79,6 +79,11 @@ void show_time() {
   board.scroll_string_small("Oh it's");
   delay(1000);
   board.render_string_small(timer.getFormattedTime());
+  for(int i = 0; i < 30; i++) {
+    board.draw_in_internal_frame_buffer();
+    board_render_internal_frame_buffer();
+    delay(1000);
+  }
   delay(1800);
   board.all_on();
   delay(200);
