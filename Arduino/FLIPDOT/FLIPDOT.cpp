@@ -290,6 +290,13 @@ void FLIPDOT::scroll_string_small(const char* str, int x_offset, int millis_dela
 }
 
 /*
+set internal frame buffer to 0
+*/
+void FLIPDOT::reset_internal_framebuffer() {
+  set_frame_buff(0);
+}
+
+/*
 all dots off
 */
 void FLIPDOT::all_off() {
@@ -333,11 +340,11 @@ void FLIPDOT::draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y){
   if(x < 0 || x > 114) {
     return;
   }
-  if(y>7 && y<COL_HEIGHT){
+  if(/*y>7*/true && y<COL_HEIGHT){
     if(val == 1){
-      frame_buff[x] |= 1 << (23-y);
+      frame_buff[x] |= 1 << (/*23-*/y);
     } else {
-      frame_buff[x] |= ~(1 << (23-y));
+      frame_buff[x] |= ~(1 << (/*23-*/y));
     }
   } else if(y>=0) {
     if(val == 1){
@@ -346,6 +353,7 @@ void FLIPDOT::draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y){
       frame_buff[x] |= ~(1 << (7-y));
     }
   }
+
 }
 
 /*

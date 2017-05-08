@@ -12,7 +12,7 @@
 
 // ---- Options ----
 //flip screen? comment out for deactivating and vice versa
-#define TURNDISPLAY_180_DEGREES
+//#define TURNDISPLAY_180_DEGREES
 
 //comment out to disable debugging information via Serial
 //#define DBG
@@ -61,10 +61,11 @@
 #define RENDER_STRING_DEFAULT_X_OFFSET 0
 #define DEFAULT_ZEROING_SETTING ZERO_LOCALLY
 
-//#define PANEL_CONFIGURATION [5] = {25,25,20,20,25} //widths of panels (either 20 or 25), change arraysize as well!
+//#define PANEL_CONFIGURATION single: [1] = {25} up to full: [5] = {25,25,20,20,25} //widths of panels (either 20 or 25), change arraysize as well!
 #define PANEL_CONFIGURATION [1] = {25}
-#define MAX_NUMBER_OF_PANELS 5
+//also adjust width!
 #define DISPLAY_WIDTH 25
+#define MAX_NUMBER_OF_PANELS 5
 #define COL_HEIGHT 16
 
 // Positions in Control Buffer
@@ -85,7 +86,6 @@
 #define ALL_COLUMN_PIXELS_ON 0b1111111111111111
 
 #if defined(DBG)
-  #include "Streaming.h"
   #include <bitset>
   #define DBG_OUTPUT_PORT(data) Serial.print(data);
   #define DBG_OUTPUT_PORT_NL(data) Serial.println(data);
@@ -172,6 +172,7 @@ public:
   void draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y);
   void all_off();
   void all_on();
+  void reset_internal_framebuffer();
   uint8_t get_panel_column_offset(uint8_t panel_index);
 private:
   uint8_t panel_configuration PANEL_CONFIGURATION;
