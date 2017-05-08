@@ -27,7 +27,7 @@ const int xPin = A0; //X attach to A0
 const int yPin = D1; //Y attach to A1
 const int btPin = D0; //Bt attach to digital 7
 */
-Snake* game = new Snake(BOARD_WIDTH,BOARD_HEIGHT);
+Snake game = Snake(BOARD_WIDTH,BOARD_HEIGHT);
 
 void setup() {
   Serial.begin(115200);
@@ -40,8 +40,8 @@ void setup() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-  board->init(); //should come after wifi is connected on ESP8266
-  game->start_game();
+  board.init(); //should come after wifi is connected on ESP8266
+  game.start_game();
   snake_start_animations();
 }
 
@@ -60,57 +60,57 @@ void loop() {
     dir = SNAKE_DOWN;
   }
   */
-  if(game->step(Snake::AUTO)){
-    //game->render_frame_buffer();
-    board->reset_internal_framebuffer();
+  if(game.step(Snake::AUTO)){
+    //game.render_frame_buffer();
+    board.reset_internal_framebuffer();
     for(unsigned int x = 0; x < BOARD_WIDTH; x++){
       for(unsigned int y = 0; y < BOARD_HEIGHT; y++){
-        if(game->pixel_is_set(x,y)){
-          board->draw_in_internal_framebuffer(1,(uint8_t)x,(uint8_t)y);
+        if(game.pixel_is_set(x,y)){
+          board.draw_in_internal_framebuffer(1,(uint8_t)x,(uint8_t)y);
         }
       }
     }
-    board->render_internal_framebuffer();
+    board.render_internal_framebuffer();
   } else {
     snake_show_score();
     delay(1500);
-    game->start_game();
+    game.start_game();
     snake_start_animations();
   }
 }
 
 void snake_show_score(){
-    board->render_string_small("Game",3,1, ZERO_ALL);
-    board->render_string_small("Over!",1,8, ZERO_NONE);
+    board.render_string_small("Game",3,1, FLIPDOT::ZERO_ALL);
+    board.render_string_small("Over!",1,8, FLIPDOT::ZERO_NONE);
     delay(1500);
     char highscore[5];
-    itoa(game->score, highscore, 10);
-    board->render_string_small("Score:",0,0, ZERO_ALL);
+    itoa(game.score, highscore, 10);
+    board.render_string_small("Score:",0,0, FLIPDOT::ZERO_ALL);
     delay(1000);
-    board->render_string_small(highscore,8,8, ZERO_NONE);
+    board.render_string_small(highscore,8,8, FLIPDOT::ZERO_NONE);
 }
 
 void snake_start_animations() {
-  board->render_string_small("SNAKE",0,4, ZERO_ALL);
+  board.render_string_small("SNAKE",0,4, FLIPDOT::ZERO_ALL);
     delay(1000);
-    board->scroll_string("ON FLIPDOT");
-    board->all_on();
+    board.scroll_string("ON FLIPDOT");
+    board.all_on();
     delay(300);
-    board->all_off();
+    board.all_off();
     delay(300);
-    board->all_on();
+    board.all_on();
     delay(100);
-    board->all_off();
-    board->render_string_small("Let's",0,4, ZERO_ALL);
+    board.all_off();
+    board.render_string_small("Let's",0,4, FLIPDOT::ZERO_ALL);
     delay(700);
-    board->all_on();
+    board.all_on();
     delay(100);
-    board->all_off();
-    board->render_string("GO", 3);
+    board.all_off();
+    board.render_string("GO", 3);
     delay(600);
-    board->all_on();
+    board.all_on();
     delay(150);
-    board->all_off();
+    board.all_off();
     delay(500);
 }
 

@@ -10,15 +10,17 @@ cache:
 
 env:
     - PLATFORMIO_CI_SRC=Arduino/examples/Wemos/Wemos.ino PLATFORMIO_CI_EXTRA_ARGS="--lib=/tmp/ESPAsyncUDP --lib=/tmp/ESPTIME --lib=/tmp/FLIPDOT --lib=/tmp/Time --lib=/tmp/Timezone --board=d1_mini --board=huzzah --board=esp01"
+    - PLATFORMIO_CI_SRC=Arduino/examples/Wemos_Demo/Wemos_Demo.ino PLATFORMIO_CI_EXTRA_ARGS="--lib=/tmp/Snake --lib=/tmp/ESPAsyncUDP --lib=/tmp/ESPTIME --lib=/tmp/FLIPDOT --lib=/tmp/Time --lib=/tmp/Timezone --board=d1_mini --board=huzzah --board=esp01"
+    - PLATFORMIO_CI_SRC=Arduino/examples/Snake/Snake.ino PLATFORMIO_CI_EXTRA_ARGS="--lib=/tmp/Snake --lib=/tmp/ESPAsyncUDP --lib=/tmp/ESPTIME --lib=/tmp/FLIPDOT --lib=/tmp/Time --lib=/tmp/Timezone --board=d1_mini --board=huzzah --board=esp01"
     - PLATFORMIO_CI_SRC=Arduino/examples/Arduino_HW/Arduino_HW.ino PLATFORMIO_CI_EXTRA_ARGS="--lib=/tmp/FLIPDOT --board=uno --board=nanoatmega168 --board=nanoatmega328"
-
+    
 install:
     - pip install -U platformio
     - cp -R Arduino/ESPAsyncUDP /tmp/
     - cp -R Arduino/ESPTIME /tmp/
     - cp -R Arduino/FLIPDOT /tmp/
     - cp -R Arduino/Time /tmp/
-    - cp -R Arduino/Timezone /tmp/
+    - git clone git@github.com:kryptokommunist/Snake.git /tmp/
 
 script:
     - platformio ci $PLATFORMIO_CI_EXTRA_ARGS

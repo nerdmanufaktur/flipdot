@@ -10,7 +10,6 @@
 // Documentation and samples are available at https://github.com/nerdmanufaktur/flipdot
 // - - - -
 #include <FLIPDOT.h>
-#include "Snake.h"
 
 FLIPDOT* board = new FLIPDOT();
 
@@ -29,7 +28,7 @@ uint16_t framebuffer2[25] = {0, 0, 0, 0, 0, 0b1111111111111111, 0b11111111111111
 void loop() {
   board->render_string("4444\0");
   delay(1000);
-  board->render_string("test", 4, ZERO_ALL);
+  board->render_string("test", 4, FLIPDOT::ZERO_ALL);
   delay(1000);
   board->all_off();
   delay(1000);
@@ -42,71 +41,71 @@ void loop() {
   }
   delay(1000);
   board->render_string_small("Tagesmenu\0", 4*CHAR_OFFSET_SMALL, 0);
-  board->render_string_small("Lauchsuppe\0", 4*CHAR_OFFSET_SMALL, 8,ZERO_NONE);
-  board->render_string_small("12:34\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("Lauchsuppe\0", 4*CHAR_OFFSET_SMALL, 8,FLIPDOT::ZERO_NONE);
+  board->render_string_small("12:34\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12 34\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12 34\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12:35\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12:35\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12 35\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12 35\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("HpyHour\0", 10.4*CHAR_OFFSET_SMALL+1, 0,ZERO_LOCALLY);
-  board->render_string_small("Ckts 7\0", 10.4*CHAR_OFFSET_SMALL+1, 8, ZERO_NONE);
-  board->render_string_small("12:36\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("HpyHour\0", 10.4*CHAR_OFFSET_SMALL+1, 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string_small("Ckts 7\0", 10.4*CHAR_OFFSET_SMALL+1, 8, FLIPDOT::ZERO_NONE);
+  board->render_string_small("12:36\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12 36\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12 36\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12:37\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12:37\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12 38\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12 38\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12:39\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12:39\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12 39\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12 39\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   board->render_string_small("Tagesmenu\0", 4*CHAR_OFFSET_SMALL, 0);
-  board->render_string_small("ist aus!  \0", 4*CHAR_OFFSET_SMALL, 8,ZERO_NONE);
+  board->render_string_small("ist aus!  \0", 4*CHAR_OFFSET_SMALL, 8,FLIPDOT::ZERO_NONE);
   delay(500);
-  board->render_string_small("12:40\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12:40\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12 41\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12 41\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
    delay(500);
-  board->render_string_small("12:42\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12:42\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("12:42\0", 0, 4,ZERO_LOCALLY);
+  board->render_string_small("12:42\0", 0, 4,FLIPDOT::ZERO_LOCALLY);
   delay(1000);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("0\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("0\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("1\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("1\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("2\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("2\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("3\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("3\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("4\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("4\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("5\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("5\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("6\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("6\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("7\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("7\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("8\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("8\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("9\0", 8,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("9\0", 8,FLIPDOT::ZERO_LOCALLY);
   delay(500);
-  board->render_string_small("     \0", 0,ZERO_LOCALLY);
-  board->render_string("10\0", 1,ZERO_LOCALLY);
+  board->render_string_small("     \0", 0,FLIPDOT::ZERO_LOCALLY);
+  board->render_string("10\0", 1,FLIPDOT::ZERO_LOCALLY);
   delay(1000);
   board->scroll_string("Hi");
   delay(1000);
@@ -138,16 +137,16 @@ void loop() {
    for (float a = 0; a <= 2 * PI; a += 0.2) {
     int x = 1 + 8 * cos(a);
     int y = 4 + 8 * sin(a);
-    board->render_string_small("test", x, y, ZERO_ALL);
+    board->render_string_small("test", x, y, FLIPDOT::ZERO_ALL);
   }
   for (float a = 2 * PI; a >= 0; a -= 0.2) {
     int x = 1 + 8 * cos(a);
     int y = 4 + 8 * sin(a);
-    board->render_string_small("test", x, y, ZERO_ALL);
+    board->render_string_small("test", x, y, FLIPDOT::ZERO_ALL);
   }
 float deg = 0;
   for (float a = 0; a <= DISPLAY_WIDTH; a++) {
-    board->render_string_small("test", a,5.5+5.5*sin(deg),ZERO_NONE);
+    board->render_string_small("test", a,5.5+5.5*sin(deg),FLIPDOT::ZERO_NONE);
     deg += 0.2;
   }
   for (float a = DISPLAY_WIDTH-1; a >= 0; a-=1) {
@@ -160,6 +159,6 @@ float deg = 0;
     board->render_internal_framebuffer();
   }
   delay(1000);
-  board->render_string("test", 4, ZERO_ALL);
+  board->render_string("test", 4, FLIPDOT::ZERO_ALL);
   delay(1000);
 }
