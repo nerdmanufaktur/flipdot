@@ -166,7 +166,7 @@ void FLIPDOT::merge_columns(uint16_t* dest_column, const uint16_t* src_column) {
 /*
 Render a char to the frame_buff with horizontal offset (can be negative)
 */
-void FLIPDOT::render_char_to_buffer(char c, short x_offset, ZeroOptionsType_t zero_buffer) {
+void FLIPDOT::render_char_to_buffer(char c, short x_offset, ZeroOptions zero_buffer) {
   // Convert the character to an index
   c = (c - 32);
   uint16_t current_font_column;
@@ -188,7 +188,7 @@ void FLIPDOT::render_char_to_buffer(char c, short x_offset, ZeroOptionsType_t ze
 /*
 Render a char with 8x8 font to the frame_buff with horizontal/vertical offsets (can be negative)
 */
-void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset,  ZeroOptionsType_t zero_buffer) {
+void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset,  ZeroOptions zero_buffer) {
   // Convert the character to an index
   c = (c - 32);
   uint8_t current_font_column;
@@ -219,7 +219,7 @@ void FLIPDOT::render_char_to_buffer_small(char c, int x_offset, short y_offset, 
 /*
 Render a string to the flip-dot with horizontal offset (can be negative)
 */
-void FLIPDOT::render_string(const char* str, int x_offset, ZeroOptionsType_t zero_buffer) {
+void FLIPDOT::render_string(const char* str, int x_offset, ZeroOptions zero_buffer) {
     DBG_OUTPUT_PORT("Render string: ")
     DBG_OUTPUT_PORT_NL(str)
     if(zero_buffer == ZERO_ALL) {set_frame_buff(0);}
@@ -240,7 +240,7 @@ void FLIPDOT::render_string(const char* str, int x_offset, ZeroOptionsType_t zer
 /*
 Render a string with 8x8 characters to the flip-dot with horizontal and vertical offset (can be negative)
 */
-void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset, ZeroOptionsType_t zero_buffer) {
+void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset, ZeroOptions zero_buffer) {
     DBG_OUTPUT_PORT("Render string small: ")
     DBG_OUTPUT_PORT_NL(str)
     if(zero_buffer == ZERO_ALL) {set_frame_buff(0);}
@@ -262,13 +262,13 @@ void FLIPDOT::render_string_small(const char* str, int x_offset, short y_offset,
 /*
 Scroll a string over the flip-dot
 */
-void FLIPDOT::scroll_string(const char* str, int x_offset, int millis_delay) {
+void FLIPDOT::scroll_string(const char* str, int x_offset, int millis_delay, ZeroOptions zero_buffer) {
     DBG_OUTPUT_PORT("Scroll string: ")
     DBG_OUTPUT_PORT_NL(str)
     const int str_size = strlen(str);
     const int initial_x_offset = x_offset;
     for(int i = 0; i < (str_size*(CHAR_OFFSET)+initial_x_offset); i++) {
-        render_string(str, x_offset);
+        render_string(str, x_offset, zero_buffer);
         x_offset--;
         delay(millis_delay);
     }
@@ -277,13 +277,13 @@ void FLIPDOT::scroll_string(const char* str, int x_offset, int millis_delay) {
 /*
 Scroll a small 8x8 font string over the flip-dot
 */
-void FLIPDOT::scroll_string_small(const char* str, int x_offset, int millis_delay, short y_offset) {
+void FLIPDOT::scroll_string_small(const char* str, int x_offset, int millis_delay, short y_offset, ZeroOptions zero_buffer) {
     DBG_OUTPUT_PORT("Scroll string small: ")
     DBG_OUTPUT_PORT_NL(str)
     const int initial_x_offset = x_offset;
     const int str_size = strlen(str);
-    for(int i = 0; i < (str_size*(CHAR_OFFSET_SMALL)+initial_x_offset); i++) {
-        render_string_small(str, x_offset, y_offset);
+    for(int i = 0; i <= (str_size*(CHAR_OFFSET_SMALL)+initial_x_offset); i++) {
+        render_string_small(str, x_offset, y_offset, zero_buffer);
         x_offset--;
         delay(millis_delay);
     }

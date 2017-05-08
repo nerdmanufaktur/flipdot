@@ -91,27 +91,27 @@ uint8_t ESPTime::getMinute() {
 void ESPTime::printTime()
 {
   time_t t = getTime();
-  DBG_OUTPUT_PORT(.print('\n'))
+  Serial.print('\n');
   sPrintI00(hour(t));
   sPrintDigits(minute(t));
   sPrintDigits(second(t));
-  DBG_OUTPUT_PORT(.print(' '))
-  DBG_OUTPUT_PORT(.print(dayShortStr(weekday(t))))
-  DBG_OUTPUT_PORT(.print(' '))
+  Serial.print(' ');
+  Serial.print(dayShortStr(weekday(t)));
+  Serial.print(' ');
   sPrintI00(day(t));
-  DBG_OUTPUT_PORT(.print(' '))
-  DBG_OUTPUT_PORT(.print(monthShortStr(month(t))))
-  DBG_OUTPUT_PORT(.print(' '))
-  DBG_OUTPUT_PORT(.print(year(t)))
-  DBG_OUTPUT_PORT(.println(' '))
+  Serial.print(' ');
+  Serial.print(monthShortStr(month(t)));
+  Serial.print(' ');
+  Serial.print(year(t));
+  Serial.println(' ');
 }
 
 //Print an integer in "00" format (with leading zero).
 //Input value assumed to be between 0 and 99.
 void ESPTime::sPrintI00(int val)
 {
-    if (val < 10) DBG_OUTPUT_PORT(.print('0'))
-    DBG_OUTPUT_PORT(.print(val, DEC))
+    if (val < 10) Serial.print('0');
+    Serial.print(val, DEC);
     return;
 }
 
@@ -119,9 +119,9 @@ void ESPTime::sPrintI00(int val)
 //Input value assumed to be between 0 and 99.
 void ESPTime::sPrintDigits(int val)
 {
-    DBG_OUTPUT_PORT(.print(':'))
-    if (val < 10) DBG_OUTPUT_PORT(.print('0'))
-    DBG_OUTPUT_PORT(.print(val, DEC))
+    Serial.print(':');
+    if (val < 10) Serial.print('0');
+    Serial.print(val, DEC);
 }
 
 std::string ESPTime::getFormattedDigits(int digits) {
@@ -135,8 +135,20 @@ std::string ESPTime::getFormattedDigits(int digits) {
   return digit_str;
 }
 
+ const char* ESPTime::getFormattedDate() {
+  time_t t = getTime();
+  std::string time_str = "";
+  time_str += dayStr(weekday(t));
+  time_str += ", ";
+  time_str += getFormattedDigits(day(t));
+  time_str += " ";
+  time_str += monthStr(month(t));
+  time_str += " ";
+  time_str += getFormattedDigits(year(t));
+  return time_str.c_str();
+}
+
 const char* ESPTime::getFormattedTime() {
-  // utility function for digital clock display: prints preceding colon and leading 0
   std::string time_str = "";
   time_str += time_str + getFormattedDigits(getHour());
   time_str += ":";

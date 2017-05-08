@@ -30,6 +30,7 @@ class ESPTime
     uint8_t getMinute();
     time_t getTime();
     const char* getFormattedTime();
+    const char* getFormattedDate();
   private:
     //UDP
     unsigned int _localPort = 123;

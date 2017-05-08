@@ -42,8 +42,8 @@
     #define SHIFT_RCK_PIN 3
 #endif
 
-#ifndef FLIPDOT_h
-#define FLIPDOT_h
+#ifndef FLIPDOT_H
+#define FLIPDOT_H
 
 // ---- Constants/Preprocessor functions ----
 
@@ -149,24 +149,23 @@
 
 // ---- Methods ----
 
-//ZERO_ALL => zero the entire buffer before rendering
-//ZERO_LOCALLY => zero the entire column if something is rendered on it, leave remaining columns as before
-//ZERO_NONE => don't zero anything, just merge the previous pixel state with the additional pixels
-typedef enum { ZERO_ALL,ZERO_LOCALLY,ZERO_NONE } ZeroOptionsType_t;
-
 class FLIPDOT {
 
 public:
+  //ZERO_ALL => zero the entire buffer before rendering
+  //ZERO_LOCALLY => zero the entire column if something is rendered on it, leave remaining columns as before
+  //ZERO_NONE => don't zero anything, just merge the previous pixel state with the additional pixels
+  typedef enum { ZERO_ALL,ZERO_LOCALLY,ZERO_NONE } ZeroOptions;
   FLIPDOT();
   void init();
   void render_frame(uint16_t frame[DISPLAY_WIDTH]);
   void render_to_panel(uint16_t* frame, uint8_t panel_index);
-  void render_string(const char *s, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, ZeroOptionsType_t zero_buffer = DEFAULT_ZEROING_SETTING);
-  void render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET, ZeroOptionsType_t zero_buffer = DEFAULT_ZEROING_SETTING);
-  void scroll_string(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS);
-  void scroll_string_small(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS, short y_offset = DEFAULT_SMALL_Y_OFFSET);
-  void render_char_to_buffer(char c, short x, ZeroOptionsType_t zero_buffer);
-  void render_char_to_buffer_small(char c, int x, short y_offset, ZeroOptionsType_t zero_buffer);
+  void render_string(const char *s, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, ZeroOptions zero_buffer = DEFAULT_ZEROING_SETTING);
+  void render_string_small(const char* str, int x_offset = RENDER_STRING_DEFAULT_X_OFFSET, short y_offset = DEFAULT_SMALL_Y_OFFSET, ZeroOptions zero_buffer = DEFAULT_ZEROING_SETTING);
+  void scroll_string(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS, ZeroOptions zero_buffer = DEFAULT_ZEROING_SETTING);
+  void scroll_string_small(const char *s, int x_offset = DEFAULT_SCROLL_X_OFFSET, int millis_delay = DEFAULT_SCROLL_DELAY_MILLISECONDS, short y_offset = DEFAULT_SMALL_Y_OFFSET, ZeroOptions zero_buffer = DEFAULT_ZEROING_SETTING);
+  void render_char_to_buffer(char c, short x, ZeroOptions zero_buffer);
+  void render_char_to_buffer_small(char c, int x, short y_offset, ZeroOptions zero_buffer);
   void merge_columns(uint16_t* dest_column, const uint16_t* src_column) ;
   void render_internal_framebuffer();
   void draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y);
