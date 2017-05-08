@@ -20,6 +20,7 @@ install:
     - cp -R Arduino/ESPTIME /tmp/
     - cp -R Arduino/FLIPDOT /tmp/
     - cp -R Arduino/Time /tmp/
+    - cp -R Arduino/Timezone /tmp/
     - git clone https://github.com/kryptokommunist/Snake.git /tmp/Snake
 
 script:
