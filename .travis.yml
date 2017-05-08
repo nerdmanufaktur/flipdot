@@ -20,7 +20,7 @@ install:
     - cp -R Arduino/ESPTIME /tmp/
     - cp -R Arduino/FLIPDOT /tmp/
     - cp -R Arduino/Time /tmp/
-    - git clone git@github.com:kryptokommunist/Snake.git /tmp/
+    - git clone https://github.com/kryptokommunist/Snake.git /tmp/
 
 script:
     - platformio ci $PLATFORMIO_CI_EXTRA_ARGS
