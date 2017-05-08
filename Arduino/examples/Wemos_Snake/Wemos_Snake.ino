@@ -19,7 +19,7 @@
 //change config in FLipdot.h if this changes!
 #define BOARD_WIDTH 25
 #define BOARD_HEIGHT 16
-FLIPDOT *board = new FLIPDOT();
+FLIPDOT board = FLIPDOT();
 ESPTime timer = ESPTime();
 
 /*
