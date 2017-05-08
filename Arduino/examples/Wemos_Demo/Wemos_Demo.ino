@@ -41,6 +41,7 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   board.init(); //should come after wifi is connected on ESP8266
+  timer.getFormattedDate();
   board.render_string_small("My IP:");
   delay(1000);
   char ip[15];
@@ -72,12 +73,13 @@ void loop() {
 }
 
 void show_time() {
-  board.scroll_string(timer.getFormattedDate());
+  char* date = strdup(timer.getFormattedDate());
+  board.scroll_string(date );
   delay(500);
-  board.render_string_small("Oh it's");
+  board.scroll_string_small("Oh it's");
   delay(1000);
-  board.render_string(timer.getFormattedTime(), 4, FLIPDOT::ZERO_ALL);
-  delay(1000);
+  board.render_string_small(timer.getFormattedTime());
+  delay(1800);
   board.all_on();
   delay(200);
   board.all_off();
@@ -85,21 +87,26 @@ void show_time() {
     int x = 1 + 8 * cos(a);
     int y = 4 + 8 * sin(a);
     board.render_string_small(timer.getFormattedTime(), x, y, FLIPDOT::ZERO_ALL);
+    delay(10);
   }
   for (float a = 2 * PI; a >= 0; a -= 0.2) {
     int x = 1 + 8 * cos(a);
     int y = 4 + 8 * sin(a);
     board.render_string_small(timer.getFormattedTime(), x, y, FLIPDOT::ZERO_ALL);
+    delay(10);
   }
+  board.all_off();
 float deg = 0;
-  for (float a = 0; a <= BOARD_WIDTH; a++) {
+float len = strlen(timer.getFormattedTime()) * CHAR_OFFSET_SMALL;
+  for (float a = -len; a <= BOARD_WIDTH; a++) {
     board.render_string_small(timer.getFormattedTime(), a,5.5+5.5*sin(deg), FLIPDOT::ZERO_NONE);
-    deg += 0.2;
+    deg += 6;
+    delay(50);
   }
-  int len = strlen(timer.getFormattedTime()) * CHAR_OFFSET_SMALL * -1;
-  for (float a = BOARD_WIDTH; a >= len; a-=1) {
+  for (float a = BOARD_WIDTH; a >= -len; a-=1) {
     board.render_string_small(timer.getFormattedTime(), a, 5.5+5.5*sin(deg));
-    deg -= 0.2;
+    deg -= 6;
+    delay(50);
   }
  
   mode = SHOW_SHUTTER;
