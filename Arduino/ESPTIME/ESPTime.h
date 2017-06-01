@@ -28,7 +28,8 @@ class ESPTime
     void printTime();
     uint8_t getHour();
     uint8_t getMinute();
-    time_t getTime();
+    uint8_t getSecond();
+    time_t getNtpTime();
     const char* getFormattedTime();
     const char* getFormattedDate();
   private:

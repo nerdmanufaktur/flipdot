@@ -21,53 +21,18 @@ FLIPDOT::FLIPDOT() {
   pinMode(SHIFT_OE_PIN, OUTPUT);
   digitalWrite(SHIFT_OE_PIN, LOW); // output shift register values
   number_of_panels = sizeof(panel_configuration)/sizeof(panel_configuration[0]);
+  DBG_OUTPUT_PORT("Created FLIPDOT. Calculated no of panels: ")
+  DBG_OUTPUT_PORT_NL(number_of_panels)
 }
 
 /*
 Initialize all pins and getting the SPI ready to rock!
 */
 void FLIPDOT::init() {
-
   SPI.begin();
   SPI.setDataMode(SPI_MODE0);
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV2);
-
-  //only for esp8266
-  #if defined(ESP8266)
-    //Initialize ansynchronous UDP server to listen for incoming frames
-    if(udp.listen(UDP_PORT_FRAME_SERVER)) {
-          DBG_OUTPUT_PORT("UDP Listening on IP: ")
-          DBG_OUTPUT_PORT(WiFi.localIP())
-          DBG_OUTPUT_PORT(" Port:")
-          DBG_OUTPUT_PORT_NL(UDP_PORT_FRAME_SERVER)
-          udp.onPacket([&](AsyncUDPPacket packet) {
-              DBG_OUTPUT_PORT("UDP Packet Type: ")
-              DBG_OUTPUT_PORT(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast")
-              DBG_OUTPUT_PORT(", From: ")
-              DBG_OUTPUT_PORT(packet.remoteIP())
-              DBG_OUTPUT_PORT(":")
-              DBG_OUTPUT_PORT(packet.remotePort())
-              DBG_OUTPUT_PORT(", To: ")
-              DBG_OUTPUT_PORT(packet.localIP())
-              DBG_OUTPUT_PORT(":")
-              DBG_OUTPUT_PORT(packet.localPort())
-              DBG_OUTPUT_PORT(", Length: ")
-              DBG_OUTPUT_PORT(packet.length())
-              DBG_OUTPUT_PORT(", Data: ")
-              DBG_OUTPUT_PORT_NL()
-              #if defined(DBG)
-                Serial.write(packet.data(), packet.length());
-                //reply to the client
-                packet.printf("Got %u bytes of data", packet.length());
-              #endif
-              FLIPDOT::process_udp_frame(packet.data(), packet.length());
-          });
-        }
-    #endif
-
-    DBG_OUTPUT_PORT("Initialized FLIPDOT. Calculated no of panels: ")
-    DBG_OUTPUT_PORT_NL(number_of_panels)
 }
 
 /*
@@ -83,7 +48,8 @@ void FLIPDOT::writeToRegisters() {
   		    uint8_t pattern[2] = { (uint8_t)(c >> 8), (uint8_t)(c >> 0) };
   		    SPI.writePattern(pattern, 2, (uint8_t)1);
   		#else
-  			 SPI.transfer(columnBuffer >> 8); SPI.transfer(columnBuffer >> 0);
+  			 SPI.transfer(columnBuffer >> 8);
+         SPI.transfer(columnBuffer >> 0);
       #endif
   #endif
   digitalWrite(SHIFT_RCK_PIN, HIGH);
@@ -144,7 +110,11 @@ void FLIPDOT::render_to_panel(uint16_t* frame, uint8_t panel_index) {
         DBG_OUTPUT_PORT_NL(std::bitset<16>(col).to_string().c_str());
         DBG_OUTPUT_PORT("Index current_col: ")
         DBG_OUTPUT_PORT_NL(current_col)
-        writeToNewColumn(col, pin) //future optimization: skip columns!
+        if(col_changed[current_col]){
+          writeToNewColumn(col, pin, 800) //future optimization: skip columns!
+        } else {
+          writeToNewColumn(col, pin, 10)
+        }
     }
     DBG_OUTPUT_PORT_NL()
 }
@@ -155,6 +125,31 @@ Render internal frame buffer on the board
 void FLIPDOT::render_internal_framebuffer() {
       render_frame(frame_buff);
 }
+
+/*
+Render internal frame buffer on the board with a animation stepping through every changed pixel one by one
+*/
+void FLIPDOT::render_internal_framebuffer_diff_step_animation() {
+      /*
+        TO-DO: Implement for different patterns not just upper left to lower right;
+      */
+      render_frame(frame_buff);
+      for(int x = 0; x < DISPLAY_WIDTH; x++){
+        uint16_t current_col = frame_buff[x];
+        uint16_t last_col = last_frame_buff[x];
+        if(current_col != last_col){
+          for(int y = 0; y < 16; y++){
+            uint8_t bit_mask = 1 << y;
+            uint8_t current_col_bit = current_col & bit_mask;
+            if (current_col_bit != (last_col & bit_mask)) {
+              draw_in_internal_framebuffer(current_col_bit,x,y);
+              render_internal_framebuffer();
+            }
+          }
+        }
+      }
+}
+
 
 /*
 Merges two given columns into the dest_column
@@ -357,6 +352,26 @@ void FLIPDOT::draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y){
 }
 
 /*
+change a byte in internal frame buffer at given coordinates
+*/
+void FLIPDOT::draw_byte_in_internal_framebuffer(uint8_t val, uint8_t x, uint8_t y){
+  DBG_OUTPUT_PORT_NL("Drawing in internal framebuffer: ")
+  // stupid vodoo because of endianness of uint16_t...
+  if(x < 0 || x > 114) {
+    return;
+  }
+  if(y<COL_HEIGHT && y >= 0){
+    if(y == 8) {
+      frame_buff[x] = (frame_buff[x] & ~(-1 << 8)) | val << y;
+    } else {
+      frame_buff[x] = (frame_buff[x] & (-1 << 8)) | val << y;
+    }
+  }
+
+}
+
+
+/*
 fill the internal frame buffer with given value
 */
 void FLIPDOT::set_frame_buff(int val) {
@@ -367,19 +382,23 @@ void FLIPDOT::set_frame_buff(int val) {
 returns true if the frame_buff changed compared to last_frame_buff
 */
 bool FLIPDOT::frame_buff_changed_for_panel(uint8_t panel_index) {
+  bool did_change = false;
   const uint8_t column_offset = get_panel_column_offset(panel_index);
   const uint8_t panel_width = panel_configuration[panel_index];
   for(int i = column_offset; i < (column_offset+panel_width); i++) {
     if(frame_buff[i] != last_frame_buff[i]){
       uint16_t* ptr = frame_buff;
-      ptr += column_offset;
+      ptr += i;
       uint16_t* last_ptr = last_frame_buff;
-      last_ptr += column_offset;
-      memcpy(last_ptr, ptr, panel_configuration[panel_index]*2); //*2 for number of bytes
-      return true;
+      last_ptr += i;
+      memcpy(last_ptr, ptr, 2); //*2 for number of bytes
+      col_changed[i] = true;
+      did_change = true;
+    } else {
+      col_changed[i] = false;
     }
   }
-  return false;
+  return did_change;
 }
 
 /*
@@ -393,8 +412,59 @@ uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
     return column_offset;
 }
 
+/*
+  returns the byte at specified x,y positions
+*/
+uint8_t FLIPDOT::read_internal_framebuffer(uint8_t x, uint8_t y) {
+  return frame_buff[x] << y;
+}
+
 //only for esp8266
 #if defined(ESP8266)
+
+/*
+Start an udp server listening for frames, wait for Wifi connection before calling
+*/
+void FLIPDOT::start_udp_server() {
+  //Initialize ansynchronous UDP server to listen for incoming frames
+  if(udp.listen(UDP_PORT_FRAME_SERVER)) {
+        DBG_OUTPUT_PORT("UDP Listening on IP: ")
+        DBG_OUTPUT_PORT(WiFi.localIP())
+        DBG_OUTPUT_PORT(" Port:")
+        DBG_OUTPUT_PORT_NL(UDP_PORT_FRAME_SERVER)
+        udp.onPacket([&](AsyncUDPPacket packet) {
+            DBG_OUTPUT_PORT("UDP Packet Type: ")
+            DBG_OUTPUT_PORT(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast")
+            DBG_OUTPUT_PORT(", From: ")
+            DBG_OUTPUT_PORT(packet.remoteIP())
+            DBG_OUTPUT_PORT(":")
+            DBG_OUTPUT_PORT(packet.remotePort())
+            DBG_OUTPUT_PORT(", To: ")
+            DBG_OUTPUT_PORT(packet.localIP())
+            DBG_OUTPUT_PORT(":")
+            DBG_OUTPUT_PORT(packet.localPort())
+            DBG_OUTPUT_PORT(", Length: ")
+            DBG_OUTPUT_PORT(packet.length())
+            DBG_OUTPUT_PORT(", Data: ")
+            DBG_OUTPUT_PORT_NL()
+            #if defined(DBG)
+              Serial.write(packet.data(), packet.length());
+              //reply to the client
+              packet.printf("Got %u bytes of data", packet.length());
+            #endif
+            time_since_last_udp_frame = millis();
+            FLIPDOT::process_udp_frame(packet.data(), packet.length());
+        });
+      }
+  }
+
+  /*
+  Stop the udp server
+  */
+  void FLIPDOT::stop_udp_server() {
+    udp.close();
+  }
+
   /*
   processes incoming frame received via ansynchronous udp server
   */
@@ -405,5 +475,12 @@ uint8_t FLIPDOT::get_panel_column_offset(uint8_t panel_index) {
       memcpy(frame_buff, data, DISPLAY_WIDTH*2);
       render_internal_framebuffer_no_yield();
     }
+  }
+
+  /*
+  Check if a udp frame was received in the last 3 seconds
+  */
+  bool FLIPDOT::received_udp_frame_recently() {
+    return millis() > time_since_last_udp_frame + 3000;
   }
 #endif

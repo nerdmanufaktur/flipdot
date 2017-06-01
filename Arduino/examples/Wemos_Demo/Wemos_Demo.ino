@@ -41,7 +41,6 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   board.init(); //should come after wifi is connected on ESP8266
-  timer.getFormattedDate();
   board.render_string_small("My IP:");
   delay(1000);
   char ip[15];
@@ -72,8 +71,27 @@ void loop() {
   }
 }
 
+/*
+void clock_mode() {
+  while(true) {
+    if(timer.get_second() == 0){
+      board.all_off();
+    }
+    board.render_string_small(timer.getFormattedTime(),0,1, FLIPDOT::ZERO_NONE);
+    render_seconds_pixel();
+  }
+}
+
+
+void render_seconds_pixel(){
+  uint8_t sec = timer.get_second();
+  uint8_t row = sec/12; //12 pixel per row
+  uint8_t pos_in_row = (sec % 13)*2;
+  board.draw_in_internal_framebuffer(1,pos_in_row,10+row);
+}*/
+
 void show_time() {
-  char* date = strdup(timer.getFormattedDate());
+  const char* date = timer.getFormattedDate();//strdup(hour() + ":" + minute() + ":" + second() + " " + day() + "." + month() + "." + year());
   board.scroll_string(date );
   delay(500);
   board.scroll_string_small("Oh it's");

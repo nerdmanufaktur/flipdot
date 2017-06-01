@@ -56,7 +56,7 @@ void setup()
   Serial.print("Local port: ");
   Serial.println(Udp.localPort());
   Serial.println("waiting for sync");
-  setSyncProvider(getNtpTime);
+  setSyncProvider(getNtpTime&);
   setSyncInterval(300);
 }
 

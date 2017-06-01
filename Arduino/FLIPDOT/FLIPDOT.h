@@ -12,7 +12,7 @@
 
 // ---- Options ----
 //flip screen? comment out for deactivating and vice versa
-//#define TURNDISPLAY_180_DEGREES
+#define TURNDISPLAY_180_DEGREES
 
 //comment out to disable debugging information via Serial
 //#define DBG
@@ -61,10 +61,11 @@
 #define RENDER_STRING_DEFAULT_X_OFFSET 0
 #define DEFAULT_ZEROING_SETTING ZERO_LOCALLY
 
-//#define PANEL_CONFIGURATION single: [1] = {25} up to full: [5] = {25,25,20,20,25} //widths of panels (either 20 or 25), change arraysize as well!
+//#define PANEL_CONFIGURATION single: [1] = {25} up to full: [5] = {25,25,20,20,25}
+//each entry being the width of the iths panel (either 20 or 25), change arraysize as well!
 #define PANEL_CONFIGURATION [1] = {25}
-//also adjust width!
-#define DISPLAY_WIDTH 25
+#define DISPLAY_WIDTH 25 //also adjust width!
+
 #define MAX_NUMBER_OF_PANELS 5
 #define COL_HEIGHT 16
 
@@ -128,7 +129,7 @@
     writeToRegisters();
 
   //function call is too slow and the compiler not clever enough, therefore we use a preprocessor fake function
-  #define writeToNewColumn(data,select_pin) delayMicroseconds(1100);\
+  #define writeToNewColumn(data,select_pin,time) delayMicroseconds(time);\
       setControlBits(1,1,1,1,select_pin)\
       writeToRegisters();\
       setControlBits(1,0,1,1,select_pin)\
@@ -136,7 +137,7 @@
       setControlBits(1,1,1,1,select_pin)\
       columnBuffer = data;\
       writeToRegisters();\
-      delayMicroseconds(800);\
+      delayMicroseconds(time);\
       columnBuffer = 0;\
       setControlBits(0,1,1,1,select_pin)\
       writeToRegisters();\
@@ -156,6 +157,7 @@ public:
   //ZERO_LOCALLY => zero the entire column if something is rendered on it, leave remaining columns as before
   //ZERO_NONE => don't zero anything, just merge the previous pixel state with the additional pixels
   typedef enum { ZERO_ALL,ZERO_LOCALLY,ZERO_NONE } ZeroOptions;
+  typedef enum { NONE, STEP_THROUGH_PIXEL_CHANGES } Animation;
   FLIPDOT();
   void init();
   void render_frame(uint16_t frame[DISPLAY_WIDTH]);
@@ -168,10 +170,16 @@ public:
   void render_char_to_buffer_small(char c, int x, short y_offset, ZeroOptions zero_buffer);
   void merge_columns(uint16_t* dest_column, const uint16_t* src_column) ;
   void render_internal_framebuffer();
+  void render_internal_framebuffer_diff_step_animation();
   void draw_in_internal_framebuffer(int val, uint8_t x, uint8_t y);
+  void draw_byte_in_internal_framebuffer(uint8_t val, uint8_t x, uint8_t y);
   void all_off();
   void all_on();
+  void start_udp_server();
+  void stop_udp_server();
+  bool received_udp_frame_recently();
   void reset_internal_framebuffer();
+  uint8_t read_internal_framebuffer(uint8_t x, uint8_t y);
   uint8_t get_panel_column_offset(uint8_t panel_index);
 private:
   uint8_t panel_configuration PANEL_CONFIGURATION;
@@ -181,6 +189,7 @@ private:
   uint16_t last_frame_buff[DISPLAY_WIDTH] = {0};
   uint16_t columnBuffer = 0; //holds data of current column pixel data
   byte controlBuffer = 0; //holds data of current control bits (clear, clock, reset, select 1, ... , select 5)
+  bool col_changed[DISPLAY_WIDTH] = {false}; //indicates if column changed since last rendering
   void writeToRegisters();
   void render_frame_no_yield(uint16_t frame[DISPLAY_WIDTH]);
   void render_internal_framebuffer_no_yield();
@@ -191,6 +200,7 @@ private:
   //only for esp8266
   #if defined(ESP8266)
     AsyncUDP udp;
+    long time_since_last_udp_frame;
     void process_udp_frame(uint8_t* data, size_t length);
   #endif
 };

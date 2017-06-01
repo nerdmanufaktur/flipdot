@@ -75,22 +75,26 @@ void ESPTime::_sendNTPpacket(IPAddress &address)
   _udp.endPacket();
 }
 
-time_t ESPTime::getTime() {
+time_t ESPTime::getNtpTime() {
   if (!updateTime(_ntpServerName1)) { updateTime(_ntpServerName2); }
   return _CE->toLocal(now(), &tcr);
 }
 
 uint8_t ESPTime::getHour() {
-  return hour(getTime());
+  return hour(getNtpTime());
 }
 
 uint8_t ESPTime::getMinute() {
-  return minute(getTime());
+  return minute(getNtpTime());
+}
+
+uint8_t ESPTime::getSecond() {
+  return second(getNtpTime());
 }
 
 void ESPTime::printTime()
 {
-  time_t t = getTime();
+  time_t t = getNtpTime();
   Serial.print('\n');
   sPrintI00(hour(t));
   sPrintDigits(minute(t));
@@ -136,7 +140,7 @@ std::string ESPTime::getFormattedDigits(int digits) {
 }
 
  const char* ESPTime::getFormattedDate() {
-  time_t t = getTime();
+  time_t t = getNtpTime();
   std::string time_str = "";
   time_str += dayStr(weekday(t));
   time_str += ", ";
