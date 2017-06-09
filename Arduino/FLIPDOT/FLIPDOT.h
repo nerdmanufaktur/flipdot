@@ -63,8 +63,8 @@
 
 //#define PANEL_CONFIGURATION single: [1] = {25} up to full: [5] = {25,25,20,20,25}
 //each entry being the width of the iths panel (either 20 or 25), change arraysize as well!
-#define PANEL_CONFIGURATION [1] = {25}
-#define DISPLAY_WIDTH 25 //also adjust width!
+#define PANEL_CONFIGURATION [5] = {25,25,20,20,25}
+#define DISPLAY_WIDTH 115 //also adjust width!
 
 #define MAX_NUMBER_OF_PANELS 5
 #define COL_HEIGHT 16

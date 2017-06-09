@@ -111,9 +111,9 @@ void FLIPDOT::render_to_panel(uint16_t* frame, uint8_t panel_index) {
         DBG_OUTPUT_PORT("Index current_col: ")
         DBG_OUTPUT_PORT_NL(current_col)
         if(col_changed[current_col]){
-          writeToNewColumn(col, pin, 800) //future optimization: skip columns!
+          writeToNewColumn(col, pin, 800) //give the spools time to flip!
         } else {
-          writeToNewColumn(col, pin, 10)
+          writeToNewColumn(col, pin, 10) //no change => no time needed
         }
     }
     DBG_OUTPUT_PORT_NL()

@@ -13,11 +13,12 @@
 #include <FLIPDOT.h>
 #include <ESPTime.h>
 #include <Snake.h>
+#include <ESP8266HTTPClient.h>
 
 #define SSID "Mettigel24.de | Get off my LAN"
 #define PASSWORD "N00bznet?NoWay!"
 //change config in FLipdot.h if this changes!
-#define BOARD_WIDTH 25
+#define BOARD_WIDTH 95
 #define BOARD_HEIGHT 16
 FLIPDOT board = FLIPDOT();
 ESPTime timer = ESPTime();
@@ -49,7 +50,7 @@ void setup() {
   delay(1500);
 }
 
-enum {SHOW_SNAKE, SNAKE_INIT, SHOW_CLOCK, SHOW_SHUTTER};
+enum {SHOW_SNAKE, SNAKE_INIT, SHOW_CLOCK, SHOW_SHUTTER, SHOW_TWEET};
 int mode = SHOW_CLOCK;
 
 void loop() {
@@ -66,6 +67,9 @@ void loop() {
         break;
     case SHOW_SHUTTER:
         shutter_animation();
+        break;
+    case SHOW_TWEET:
+        show_tweet();
         break;
     default:;
   }
@@ -127,7 +131,7 @@ float len = strlen(timer.getFormattedTime()) * CHAR_OFFSET_SMALL;
     delay(50);
   }
  
-  mode = SHOW_SHUTTER;
+  mode = SHOW_TWEET;
 }
 
 void play_snake_game(){
@@ -142,6 +146,7 @@ void play_snake_game(){
       }
     }
     board.render_internal_framebuffer();
+    delay(100);
   } else {
     snake_show_score();
   }
@@ -195,6 +200,52 @@ void shutter_animation() {
     delay(i);
   }
 
+  board.scroll_string("HPI MAKERKLUB");
+
   mode = SNAKE_INIT;
+}
+
+
+void show_tweet() {
+  /*
+  if(WiFi.status() == WL_CONNECTED) {
+        
+        HTTPClient http;
+
+        Serial.print("[HTTP] begin...\n");
+        // configure traged server and url
+        //http.begin("https://192.168.1.12/test.html", "7a 9c f4 db 40 d3 62 5a 6e 21 bc 5c cc 66 c8 3e a1 45 59 38"); //HTTPS
+        http.begin("http://blog.fefe.de"); //HTTP
+
+        Serial.print("[HTTP] GET...\n");
+        // start connection and send HTTP header
+        int httpCode = http.GET();
+
+        // httpCode will be negative on error
+        if(httpCode > 0) {
+            // HTTP header has been send and Server response header has been handled
+            Serial.printf("[HTTP] GET... code: %d\n", httpCode);
+
+            // file found at server
+            if(httpCode == HTTP_CODE_OK) {
+                delay(500);
+                Serial.println("HEY");
+                String payload = http.getString();
+                Serial.println("NEY");
+                int firstNews = payload.indexOf('</image>\n<item>\n<title>');
+                int endFirstNews = payload.indexOf('</title>', firstNews + 1 );
+                Serial.println(payload);
+                payload = payload.substring(firstNews+13, endFirstNews-1);
+                delay(500);
+                Serial.println(payload.substring(0,50));
+                //board.scroll_string(payload);
+            }
+        } else {
+            Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        }
+
+        http.end();
+    }*/
+    mode = SNAKE_INIT;
 }
 

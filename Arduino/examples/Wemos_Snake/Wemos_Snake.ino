@@ -17,7 +17,7 @@
 #define SSID "Mettigel24.de | Get off my LAN"
 #define PASSWORD "N00bznet?NoWay!"
 //change config in FLipdot.h if this changes!
-#define BOARD_WIDTH 25
+#define BOARD_WIDTH 115
 #define BOARD_HEIGHT 16
 FLIPDOT board = FLIPDOT();
 ESPTime timer = ESPTime();
